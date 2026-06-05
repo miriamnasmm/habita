@@ -1,9 +1,16 @@
 # Habita — Contexto del proyecto (para el Proyecto de claude.ai de diseño)
 
-> **Para qué sirve este archivo:** súbelo al *Knowledge* de tu Proyecto de claude.ai (o pégalo en
-> "Instrucciones del proyecto"). Resume el estado REAL de la implementación para que cualquier
-> diseño/estética que generes allá encaje sin fricción con lo que ya está construido acá.
-> **Última actualización:** 2026-06-04 (añadida capa MAP_GEO: parques/avenidas reales de OSM).
+> **Para qué sirve este archivo:** vive en el repo `miriamnasmm/habita` (fuente de verdad). Resume el
+> estado REAL de la implementación para que cualquier diseño/estética que generes encaje sin fricción.
+> **Última actualización:** 2026-06-04 (Lab: colegios/salud reales, capas, pestañas, buscador; heatmap eliminado; repo + URL en vivo).
+
+## 0. Fuente de verdad + flujo
+- **Código real:** https://github.com/miriamnasmm/habita
+- **Mapa final EN VIVO (previsualiza la última versión):** https://miriamnasmm.github.io/habita/
+- **Loop:** diseñas/iteras partiendo SIEMPRE de la versión real (lee `map_template.html` + este archivo
+  del repo) → se previsualiza → se integra con datos reales en Claude Code → se sube al repo → la URL en
+  vivo se actualiza → esa URL es la referencia de la siguiente ronda. **Antes de proponer cambios, revisa
+  la URL en vivo para no repetir lo ya hecho.**
 
 ---
 
@@ -11,85 +18,87 @@
 Buscador inmobiliario centrado en un **mapa** + un **"puntaje de habitabilidad" (0–100)** que se
 recalcula por propiedad según las **prioridades del usuario** (perfil + filtros). Diferenciador vs
 Urbania: el mapa se "pinta" según qué tan bien viviría *esta persona* en *esa* propiedad.
-Alcance actual: **Pueblo Libre, Lima** (68 propiedades reales). Luego, Lima en general.
+Alcance actual: **Pueblo Libre, Lima** (68 propiedades reales). Luego, Lima en general (ya hay buscador
+multi-distrito; otros distritos quedan "Próximamente" hasta cargar su data).
 
 ## 2. Stack real (importante para el diseño)
-- **NO es React en producción.** La app vive en un **único `map.html` autocontenido**: HTML + CSS +
-  **JavaScript vanilla** + **Leaflet** (mapa, tiles CARTO light). Se genera desde
-  `map_template.html` inyectando los datos (`map_data.json`) en un centinela.
-- Por eso, cuando entregues un diseño, lo ideal es: **tokens (CSS variables), clases CSS y
-  estructura HTML** (o una descripción clara). Prototipos en React/Babel sirven de referencia, pero
-  se reescriben a vanilla. Evita dependencias de framework/bundler.
-- Las fotos son reales (varias por aviso → galería). El mapa y la atribución OSM/CARTO ya están.
+- **NO es React en producción.** La app vive en un **único `index.html`/`map.html` autocontenido**:
+  HTML + CSS + **JavaScript vanilla** + **Leaflet**. Se genera desde `map_template.html` inyectando
+  `map_data.json` (propiedades) y `map_geo.json` (geometría OSM) en centinelas.
+- Entrega diseño como **tokens (CSS variables), clases CSS y estructura HTML** (o descripción clara).
+  Prototipos React/Babel sirven de referencia pero se reescriben a vanilla. Sin frameworks/bundlers.
 
-## 3. Dirección visual ACTUAL = "Cálida" (ya implementada)
-Paleta cálida terracota/crema, tipografía serif para destacados. Tokens reales en uso:
-
+## 3. Dirección visual ACTUAL = "Cálida"
+Paleta cálida terracota/crema, serif para destacados. Tokens reales:
 ```
 --clay:#C2562F  --clay-deep:#A2421F  --clay-soft:#D98A63
 --espresso:#3A2218  --espresso-2:#5A3D2E
 --cream:#FBF6F0  --cream-2:#F5ECE1  --cream-3:#EFE3D5
 --ink:#2C1C14  --muted:#8A7466  --line:#E6D7C7  --line-2:#EADFD2  --ok:#4E8A5B
 --serif:'Newsreader'  --sans:'Hanken Grotesk'
---shadow:0 10px 30px -12px rgba(58,34,24,.28)
 ```
-Escala de color del puntaje (`scoreColor`, interpolación): 0 #963424 (arcilla) → .42 #B6452B →
-.60 #D89A3F (ocre) → .78 olivo → 1 #4E8A5B (salvia). Palabras: ≥75 Excelente, ≥62 Muy buena,
-≥50 Buena, ≥40 Regular, <40 Baja.
+Escala del puntaje (`scoreColor`): 0 #963424 (arcilla) → .42 #B6452B → .60 #D89A3F (ocre) → .78 olivo
+→ 1 #4E8A5B (salvia). Palabras: ≥75 Excelente, ≥62 Muy buena, ≥50 Buena, ≥40 Regular, <40 Baja.
 
-**Layout:** grid `360px sidebar(crema) + mapa`; ficha de detalle deslizante (438px) desde la
-derecha; responsivo <820px (se apila, ficha como bottom-sheet, leyenda oculta).
-**Componentes ya hechos:** logo casa, tarjetas de perfil, dual-range de precio, toggles de
-dormitorios, "ajuste fino", leyenda flotante, pines-gota con puntaje (anillo punteado = en
-construcción), **anillo de puntaje** (conic-gradient), grid de stats, CTAs "Ver aviso"/WhatsApp,
-barras "¿Por qué este puntaje?", y **capa de parques reales** (polígonos OSM verde plano bajo los
-pines) + **avenidas ruidosas** (líneas, severidad HIGH/MODERATE).
+**Layout:** grid `360px sidebar(crema) + mapa`; ficha deslizante (438px); responsivo <820px (se apila,
+ficha como bottom-sheet, leyenda oculta).
+**Componentes ya hechos:**
+- Sidebar: logo casa, **pestañas Prioridades / Resultados (lista)**, tarjetas de perfil, dual-range de
+  precio, toggles de dormitorios, "ajuste fino".
+- Mapa: base **sin etiquetas + capa de etiquetas en pane superior** (los nombres de calle quedan SOBRE
+  el verde); **parques verde plano** (polígonos OSM); **avenidas ruidosas** (líneas HIGH/MODERATE);
+  pines-gota con puntaje (anillo punteado = en construcción), seleccionado crece + panTo.
+- **Control de capas** flotante (toggles: **Colegios, Salud, Avenidas**; parques fijos). *(El "mapa de
+  calor" existió y se ELIMINÓ por redundante con los pines — no lo reincorpores salvo pedido explícito.)*
+- Capas de puntos: **Colegios** (badges azules) y **Salud** (badges teal), de OSM.
+- Leyenda flotante (escala de habitabilidad + Parque/Colegio/Salud/En construcción).
+- Ficha: galería de fotos, ❤️ favorito, badge de fuente, precio serif + soles + $/m², **anillo de
+  puntaje** + palabra, grid de stats, CTAs "Ver aviso"/WhatsApp, barras "¿Por qué este puntaje?".
+- **Buscador** multi-distrito + calles/parques/avenidas (geocodificación Nominatim).
 
-> Nota: hubo una versión previa **verde** (Inter, badge %); quedó respaldada pero NO es la actual.
-> Si propones cambiar de paleta otra vez, dilo explícito.
+> Hubo una versión previa **verde** (Inter, badge %); respaldada pero NO es la actual.
 
-## 4. Esquema de datos REAL por propiedad (lo que el diseño puede mostrar)
-Campos disponibles hoy (de scraping de Urbania + OSM):
+## 4. Esquema de datos REAL por propiedad
 ```
 id, address, lat, lng, source ("urbania" | "developer_site"=proyecto en construcción),
 price_usd, price_pen, area_total_m2, bedrooms, url, publisher_whatsapp, project_status,
 delivery_year, thumbs[] (fotos), description
-_score: composite(0-1), ppm_usd ($/m²), age_label, building_floors_est, llm_unit_floor,
+_score: composite(0-1), ppm_usd, age_label, building_floors_est, llm_unit_floor,
         park_name/park_dist_m, stroad_nearest_name/dist/severity, metro_name/metro_dist_m,
-        y los SUB-SCORES 0-1 que alimentan el puntaje (ver abajo)
+        + los SUB-SCORES 0-1 (ver §5)
 ```
+**Geometría OSM (`map_geo.json`):** `parks[]` (polígonos), `schools[]` y `health[]` (puntos lat/lng),
+`stroads[]` (líneas + severidad). Generado por `osm/build_map_geo.py` (recortado a la bbox de PL-Lima).
 
-## 5. Motor de puntaje REAL (rank.py) — 9 factores, sub-scores 0–1
-`stroad`(calle tranquila) · `commerce`(comercio a pie) · `conn`(commute/conectividad) ·
-`park`(parque) · `health`(salud) · `modernity`(la casa) · `cross`(caminable) · `bus`(transporte) ·
-`value`(precio/m²). El puntaje = Σ(sub·peso)/Σpeso, recalculado **en vivo** en el navegador.
-
-**Perfiles** (pesos sobre esos 9 factores), default = *Familia con niños*:
-- Tranquilidad/vivir · Familia con niños · Inversión/reventa · Personalizado (5 sliders:
-  Tranquilidad→stroad, Parques→park, Comercio→commerce, Transporte→conn, Precio→value).
+## 5. Motor de puntaje REAL — sub-scores 0–1
+`stroad`(calle tranquila) · `commerce`(comercio a pie) · `conn`(transporte/conectividad) ·
+`park`(parque) · `health`(salud) · `school`(colegios) · `modernity`(la casa) · `cross`(caminable) ·
+`bus`(transporte) · `value`(precio/m²). Puntaje = Σ(sub·peso)/Σpeso, **en vivo** en el navegador.
+- **`school`** se calcula en el cliente desde `map_geo.json.schools` (distancia al colegio más cercano
+  → 0..1). El resto sale de `rank.py`/OSM.
+- **Perfiles** (default *Familia con niños*): Tranquilidad/vivir · Familia con niños · Inversión/reventa ·
+  Personalizado (5 sliders: Tranquilidad→stroad, Parques→park, Comercio→commerce, Transporte→conn,
+  Precio→value).
+- "¿Por qué este puntaje?" muestra 5 barras: Calle tranquila, Comercio a pie, Parque cerca, **Colegios
+  cerca**, Salud (y/o Transporte).
 
 ## 6. ⚠️ Brechas de datos (diséñalo con esto en mente)
-Aún NO tenemos data real de: **colegios**, **seguridad**, **servicios (agua/luz)**, **clubs**,
-**malls**, **ciclovías**, **commute real al trabajo**, **riesgo sísmico/suelo**. Están en el backlog.
-→ Si un diseño los muestra, hay que marcarlos "próximamente" o no inventarlos. Ej.: la barra
-"Colegios" del handoff hoy se reemplaza por "Salud" (que sí es real).
+**YA SON REALES (de OSM):** parques, avenidas, **colegios**, **salud**.
+**AÚN sin fuente (no los muestres como dato real; márcalos "próximamente"):** seguridad, servicios
+(agua/luz), clubs, malls, ciclovías, commute real al trabajo, riesgo sísmico/suelo.
 
 ## 7. Estado
-- ✅ Hecho: mapa + puntaje reponderado a las prioridades del dueño, filtro de perfiles en vivo,
-  rediseño "Cálida" completo (escritorio + ficha + móvil), conectado a 68 propiedades reales,
-  y **capa MAP_GEO de parques + avenidas reales de OSM** (geometría real, no muestras a mano;
-  herramienta en `osm/build_map_geo.py`, inyectada vía centinela `__MAP_GEO__` igual que MAP_DATA).
-- ⏳ Pendiente/ideas: heatmap de comercios como toggle (opcional), recolectar más proyectos
-  (preventa/construcción), volverlo multi-distrito (Lima), traer datos del backlog que NO están en
-  OSM (empezando por **colegios, seguridad, servicios**).
-
-> Nota de datos: la geometría de parques/avenidas SÍ sale de OSM (ya resuelto). Pero **colegios,
-> seguridad, servicios, clubs, malls, ciclovías, commute real, sísmico** siguen sin fuente — no los
-> diseñes como datos reales todavía.
+- ✅ Hecho: mapa + puntaje por prioridades en vivo; rediseño "Cálida" (escritorio/ficha/móvil); 68
+  propiedades reales; capas OSM de **parques + avenidas + colegios + salud**; **sub-score de colegios**;
+  control de capas; pestañas + lista de resultados; buscador multi-distrito; etiquetas sobre el verde.
+  Publicado en GitHub + **URL en vivo** (GitHub Pages).
+- ⏳ Pendiente/ideas: cargar más distritos (multi-distrito real), más proyectos en preventa/construcción,
+  y traer datos del backlog NO-OSM (seguridad, servicios, etc.). Opcional: mover `school_score` a `rank.py`.
 
 ## 8. Cómo entregar diseño para que encaje
-1. Usa los **tokens y clases** de la sección 3 (o propón cambios explícitos sobre ellos).
-2. Muestra solo **campos que existen** (sección 4) o marca lo que falta como "próximamente".
-3. Entrega como **CSS + HTML/vanilla JS** o descripción precisa (evita React/bundlers en el entregable final).
-4. Si tocas el puntaje, recuerda que son **9 sub-scores 0–1** ponderados por perfil (sección 5).
-5. Indica comportamiento responsivo (breakpoint 820px) y estados (hover, seleccionado, vacío).
+1. Usa los **tokens y clases** de §3 (o propón cambios explícitos sobre ellos).
+2. Muestra solo **campos/datos que existen** (§4–§6) o marca lo que falta como "próximamente".
+3. Entrega como **CSS + HTML/vanilla JS** o descripción precisa (sin React/bundlers en el entregable final).
+4. Si tocas el puntaje, son **sub-scores 0–1** ponderados por perfil (§5).
+5. Indica responsivo (breakpoint 820px) y estados (hover, seleccionado, vacío).
+6. Revisa la **URL en vivo** antes de proponer, para no repetir lo ya hecho.
