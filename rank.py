@@ -42,7 +42,8 @@ OSM_FILE = ROOT / "osm_pl.json"
 FLOORS_CACHE = ROOT / "floors_cache.jsonl"
 OUT_FILE = ROOT / "ranking.jsonl"
 
-FLOOR_CAP = 8  # buildings with effective height > 8 floors get filtered out
+FLOOR_CAP = 25  # buildings taller than this are dropped (lifestyle: the live
+# UI floor filter does the fine-grained narrowing; keep the hard cap generous)
 
 
 PARKS = [
@@ -210,7 +211,8 @@ LUXURY_KW = {
     "cinema":    ["sala de cine", "home theater"],
 }
 
-LUXURY_THRESHOLD = 2  # exclude if luxury_ft_count >= 2 OR luxury_kw_count >= 2
+LUXURY_THRESHOLD = 99  # luxury no longer excluded (comprehensive coverage); the
+# score still down-weights as appropriate. Set lower again to re-enable the cut.
 
 
 def count_luxury_features(general_features):
@@ -374,26 +376,29 @@ def passes_hard_filter(r, floors_by_id, all_rows=None):
     # often lack per-unit bedroom data, so don't reject them on null.
     br = r.get("bedrooms")
     if r.get("source") == "urbania":
-        if (br or 0) < 2:
+        if (br or 0) < 1:
             return False
     else:
-        if br is not None and br < 2:
+        if br is not None and br < 1:
             return False
     if r.get("lat") is None or r.get("lng") is None:
+        return False
+    # Require photos: every shown listing must have images (quality bar).
+    if not (r.get("images") or r.get("photos")):
         return False
     # Price: prefer USD if available, else convert PEN at 3.7 (rough)
     price_usd = r.get("price_usd")
     if not price_usd and r.get("price_pen"):
         price_usd = r["price_pen"] / 3.7
     if r.get("source") == "urbania":
-        if not price_usd or price_usd < 80_000:
+        if not price_usd or price_usd < 50_000:
             return False
     else:
         # Developer rows: allow missing price (PROJECT-level rows often lack it)
-        if price_usd is not None and price_usd < 80_000:
+        if price_usd is not None and price_usd < 50_000:
             return False
     age = parse_antiquity(r.get("antiquity"))
-    if age is not None and age > 15:
+    if age is not None and age > 30:
         return False
     # Luxury common-area filter: exclude if 2+ luxury amenities OR 2+ luxury
     # keyword groups in the description.
