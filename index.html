@@ -243,7 +243,33 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-rcard-addr{font-size:.8rem;color:var(--espresso-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hb-rcard-meta{font-size:.74rem;color:var(--muted);margin-top:1px}
 .hb-rcard-word{font-size:.72rem;font-weight:700;margin-top:3px}
-.hb-results-empty{padding:46px 16px;text-align:center;color:var(--muted);font-size:.9rem;line-height:1.5}
+.hb-results-empty{padding:46px 20px;text-align:center;color:var(--muted);font-size:.9rem;line-height:1.5;display:flex;flex-direction:column;align-items:center;gap:8px}
+.hb-results-empty button,.hb-map-empty button{font-size:.84rem;font-weight:600;border-radius:10px;padding:9px 16px;transition:.14s;cursor:pointer}
+.hb-results-empty button{margin-top:6px;color:var(--clay);border:1.5px solid var(--line);background:#fff}
+.hb-results-empty button:hover{border-color:var(--clay-soft)}
+/* estado vacío sobre el mapa */
+.hb-map-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:480;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px 22px;text-align:center;max-width:266px;animation:hbFadeO .25s ease}
+.hb-map-empty .ico{color:var(--clay-soft)}
+.hb-map-empty strong{display:block;font-family:var(--serif);font-size:1.08rem;color:var(--espresso);margin:6px 0 4px}
+.hb-map-empty span{font-size:.83rem;color:var(--muted);line-height:1.45}
+.hb-map-empty button{margin-top:13px;color:#fff;background:var(--clay);border:none}
+.hb-map-empty button:hover{background:var(--clay-deep)}
+/* leyenda dentro del panel de capas (solo móvil) */
+.hb-layers-legend{display:none}
+.is-mobile .hb-layers-legend{display:block;padding:11px 13px 13px;border-top:1px solid var(--line-2)}
+/* micro-interacciones */
+.habita-pin{transition:transform .12s ease}
+.habita-pin:hover{transform:scale(1.14);z-index:1000}
+.hb-rcard{transition:border-color .14s,box-shadow .14s,transform .14s}
+.hb-rcard:hover{border-color:var(--clay-soft);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.hb-detail-scroll{animation:hbFade .34s ease}
+.hb-nav,.hb-detail-close,.hb-fav{transition:background .14s,transform .14s,color .14s}
+.hb-nav:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
+.hb-detail-close:hover{background:#fff;transform:scale(1.06)}
+.hb-fav:hover{transform:scale(1.08)}
+.hb-detail-media::after{content:"";position:absolute;top:0;left:0;right:0;height:72px;background:linear-gradient(rgba(0,0,0,.22),transparent);z-index:1;pointer-events:none}
+@keyframes hbFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes hbFadeO{from{opacity:0}to{opacity:1}}
 
 /* SEARCH / MULTI-DISTRITO */
 .hb-search{position:absolute;top:14px;left:58px;z-index:600;width:300px;max-width:calc(100% - 72px)}
@@ -295,6 +321,12 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
     <div class="habita-map" id="map"></div>
     <div class="hb-legend floating" id="legend"></div>
     <div class="hb-layers floating" id="layers"></div>
+    <div class="hb-map-empty" id="map-empty" hidden>
+      <svg class="ico" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      <strong>Sin propiedades</strong>
+      <span>Ninguna coincide con estos filtros. Prueba ampliar el precio o los dormitorios.</span>
+      <button id="map-empty-clear">Limpiar filtros</button>
+    </div>
     <div class="hb-search" id="search"></div>
     <div class="hb-coverage" id="coverage" hidden></div>
     <div id="detail-host"></div>
@@ -458,6 +490,10 @@ function passes(vm){
   if(state.avoidNoisy && vm.noisyDist!=null && vm.noisyDist<90) return false;
   return true;
 }
+function clearFilters(){
+  state.price=[80000,350000]; state.beds=[]; state.avoidNoisy=false; state.includeUnknown=true;
+  renderFilters(); recompute();
+}
 function applyFilters(){
   let shown=0;
   VMS.forEach(vm=>{
@@ -471,6 +507,7 @@ function applyFilters(){
     }
   });
   document.getElementById('count').innerHTML=`<b>${shown}</b> de ${VMS.length} propiedades`;
+  const me=document.getElementById('map-empty'); if(me) me.hidden = shown>0;
   refreshActiveLayers();
   if(state.tab==='resultados') renderResults();
 }
@@ -763,7 +800,7 @@ function buildLayers(){
       <span class="hb-layer-txt"><strong>${d.title}</strong><small>${d.sub}</small></span>
       <span class="hb-layer-tog"></span>
     </button>`;
-  const body=LAYER_DEFS.map(itemHtml).join('');
+  const body=LAYER_DEFS.map(itemHtml).join('')+`<div class="hb-layers-legend">${legendInner()}</div>`;
   document.getElementById('layers').innerHTML=`
     <button class="hb-layers-fab" id="layers-fab">${icon('layers',16)} Capas</button>
     <div class="hb-layers-head">${icon('layers',14)} Capas del mapa</div>
@@ -795,7 +832,11 @@ function renderResults(){
   renderTabs();
   const list=filteredVMS().slice().sort((a,b)=>b.score-a.score);
   const host=document.getElementById('results-pane');
-  if(!list.length){ host.innerHTML='<div class="hb-results-empty">Sin resultados.<br>Prueba ampliar el precio o los filtros.</div>'; return; }
+  if(!list.length){
+    host.innerHTML=`<div class="hb-results-empty">${icon('search',32,'none','var(--clay-soft)',1.5)}<div>Sin propiedades con estos filtros.<br>Prueba ampliar el precio o los dormitorios.</div><button id="re-clear">Limpiar filtros</button></div>`;
+    const rc=document.getElementById('re-clear'); if(rc) rc.onclick=clearFilters;
+    return;
+  }
   host.innerHTML=list.map(vm=>{
     const color=scoreColor(vm.score);
     const ph=(vm.photos&&vm.photos.length)?`<img src="${vm.photos[0]}" onerror="this.style.display='none'">`:'';
@@ -931,11 +972,12 @@ function selectDistrict(id){
 }
 
 /* ---------- legend ---------- */
-function buildLegend(){
+function legendInner(){
   const N=24, segs=[];
   for(let i=0;i<N;i++) segs.push(`<i style="background:${scoreColor((i/(N-1))*100)}"></i>`);
-  document.getElementById('legend').innerHTML=`<div class="hb-legend-title">Habitabilidad</div><div class="hb-legend-bar">${segs.join('')}</div><div class="hb-legend-scale"><span>40</span><span>60</span><span>80+</span></div><div class="hb-legend-note"><span class="dash"></span> En construcción</div><div class="hb-legend-note"><span class="lg-park"></span> Parque</div><div class="hb-legend-note"><span class="lg-school"></span> Colegio</div><div class="hb-legend-note"><span class="lg-health"></span> Salud</div>`;
+  return `<div class="hb-legend-title">Habitabilidad</div><div class="hb-legend-bar">${segs.join('')}</div><div class="hb-legend-scale"><span>40</span><span>60</span><span>80+</span></div><div class="hb-legend-note"><span class="dash"></span> En construcción</div><div class="hb-legend-note"><span class="lg-park"></span> Parque</div><div class="hb-legend-note"><span class="lg-school"></span> Colegio</div><div class="hb-legend-note"><span class="lg-health"></span> Salud</div>`;
 }
+function buildLegend(){ document.getElementById('legend').innerHTML=legendInner(); }
 
 /* ---------- responsive ---------- */
 let rt=null;
@@ -959,6 +1001,7 @@ recompute();
 parksLayer.addTo(map);
 renderParks(state.parkStyle);
 schoolsLayer.addTo(map);
+const _mec=document.getElementById('map-empty-clear'); if(_mec) _mec.onclick=clearFilters;
 checkMobile();
 </script>
 </body>
