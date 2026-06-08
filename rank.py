@@ -28,6 +28,7 @@ Backlog (sin dato aún): seguridad, servicios (agua/luz), colegios, club social,
 mall, ciclovía, tejido social, riesgo sísmico. Ver roadmap.
 """
 
+import argparse
 import json
 import math
 import sys
@@ -36,43 +37,18 @@ from pathlib import Path
 from shapely.geometry import LineString, Point
 
 ROOT = Path(__file__).parent
-_COMBINED = ROOT / "listings_combined.jsonl"
-LISTINGS = _COMBINED if _COMBINED.exists() else (ROOT / "listings.jsonl")
-OSM_FILE = ROOT / "osm_pl.json"
-FLOORS_CACHE = ROOT / "floors_cache.jsonl"
-OUT_FILE = ROOT / "ranking.jsonl"
+DISTRICTS = ROOT / "districts.json"
+# Set in main() from --district:
+LISTINGS = None
+OSM_FILE = None   # map_geo_<slug>.json (parques/avenidas/comercio/buses/salud/cruces)
+OUT_FILE = None
+FLOORS_CACHE = ROOT / "floors_cache.jsonl"   # compartido (solo PL tiene datos)
 
 FLOOR_CAP = 25  # buildings taller than this are dropped (lifestyle: the live
 # UI floor filter does the fine-grained narrowing; keep the hard cap generous)
 
 
-PARKS = [
-    {"name": "Parque San Martín", "lat": -12.07006, "lng": -77.06284},
-    {"name": "Parque Enrique León García", "lat": -12.08271, "lng": -77.06429},
-    {"name": "Parque Candamo", "lat": -12.07437, "lng": -77.06353},
-    {"name": "Parque de las Américas", "lat": -12.07054, "lng": -77.06794},
-    {"name": "Plaza Bolívar", "lat": -12.07768, "lng": -77.06229},
-    {"name": "Plaza de la Bandera", "lat": -12.06745, "lng": -77.06121},
-    {"name": "Parque Maestro", "lat": -12.07986, "lng": -77.06915},
-    {"name": "Parque Hernández", "lat": -12.07631, "lng": -77.06865},
-    {"name": "Parque 3 de Octubre", "lat": -12.07845, "lng": -77.06001},
-    {"name": "Parque 28 de Julio", "lat": -12.06857, "lng": -77.06698},
-    {"name": "Parque Santa María Magdalena", "lat": -12.07573, "lng": -77.07094},
-    {"name": "Parque El Carmen", "lat": -12.07390, "lng": -77.06870},
-    {"name": "Parque Tagore", "lat": -12.07632, "lng": -77.07812},
-    {"name": "Parque San Bernardo", "lat": -12.07145, "lng": -77.06649},
-    {"name": "Parque Galicia", "lat": -12.06905, "lng": -77.07053},
-    {"name": "Parque Cueva", "lat": -12.07079, "lng": -77.07086},
-    {"name": "Parque Chavín", "lat": -12.07292, "lng": -77.07152},
-    {"name": "Parque Suecia", "lat": -12.07689, "lng": -77.07542},
-    {"name": "Parque Amoretti", "lat": -12.08081, "lng": -77.06213},
-    {"name": "Parque Kennedy", "lat": -12.07781, "lng": -77.07417},
-    {"name": "Parque Puente y Cortéz", "lat": -12.08086, "lng": -77.06476},
-    {"name": "Parque El Helicóptero", "lat": -12.07820, "lng": -77.06078},
-    {"name": "Parque de la Cruz", "lat": -12.06998, "lng": -77.06400},
-    {"name": "Parque Roberto Owen", "lat": -12.07817, "lng": -77.07219},
-    {"name": "Parque Olavegoya", "lat": -12.07962, "lng": -77.06496},
-]
+PARKS = []  # poblado en load_osm() desde los parques de map_geo (centroides)
 
 # Map OSM avenida names (as they appear in the data) to a severity tier.
 # Anything not in this map gets MODERATE by default.
@@ -92,7 +68,7 @@ SEVERITY = {
     "Avenida General Manuel L. Vivanco": "MINOR",
     "Avenida Paso de los Andes": "MINOR",
 }
-SEVERITY_WEIGHT = {"SEVERE": 1.0, "MODERATE": 0.55, "MINOR": 0.25}
+SEVERITY_WEIGHT = {"HIGH": 1.0, "SEVERE": 1.0, "MODERATE": 0.55, "MINOR": 0.25}
 
 # Connectivity points kept inline (researched separately).
 CONN_POINTS = [
@@ -146,27 +122,47 @@ def project_line(geom):
     return LineString([(g["lon"] * _M_LNG, g["lat"] * _M_LAT) for g in geom])
 
 
+def project_latlng_line(path):
+    return LineString([(lng * _M_LNG, lat * _M_LAT) for lat, lng in path])
+
+
 # -- OSM data load ---------------------------------------------------------
 
 def load_osm():
+    """Lee map_geo_<distrito>.json (un solo archivo OSM por distrito).
+    Puebla el global PARKS desde los centroides de los parques, proyecta las
+    avenidas con su severidad (HIGH/MODERATE por tipo de vía), y arma los nodos
+    de scoring (comercio/buses/cruces como [lat,lng]; salud como puntos)."""
+    global PARKS
     data = json.loads(OSM_FILE.read_text())
-    # Pre-project avenidas. Bucket by severity.
-    avenidas = []
-    by_id = {}
-    for w in data["avenidas"]:
-        name = (w.get("tags") or {}).get("name") or ""
-        geom = w.get("geometry") or []
-        if len(geom) < 2:
+
+    PARKS = []
+    for p in data.get("parks", []):
+        poly = p.get("poly") or []
+        if not poly:
             continue
-        line = project_line(geom)
-        sev = SEVERITY.get(name, "MODERATE")
-        # dedupe by way id, but keep all segments per name in a flat list
-        avenidas.append({"name": name, "severity": sev, "line": line, "id": w.get("id")})
+        lat = sum(q[0] for q in poly) / len(poly)
+        lng = sum(q[1] for q in poly) / len(poly)
+        PARKS.append({"name": p.get("name") or "Parque", "lat": lat, "lng": lng})
+
+    avenidas = []
+    for s in data.get("stroads", []):
+        path = s.get("path") or []
+        if len(path) < 2:
+            continue
+        avenidas.append({
+            "name": s.get("name") or "",
+            "severity": s.get("severity") or "MODERATE",
+            "line": project_latlng_line(path),
+            "id": None,
+        })
+
     nodes = {}
-    for key in ("commerce", "bus", "health", "crossings"):
-        nodes[key] = [
-            (n["lat"], n["lon"]) for n in data.get(key, []) if "lat" in n and "lon" in n
-        ]
+    for key in ("commerce", "bus", "crossings"):
+        nodes[key] = [(q[0], q[1]) for q in data.get(key, [])
+                      if isinstance(q, (list, tuple)) and len(q) >= 2]
+    nodes["health"] = [(h["lat"], h["lng"]) for h in data.get("health", [])
+                       if h.get("lat") is not None and h.get("lng") is not None]
     return avenidas, nodes
 
 
@@ -584,6 +580,14 @@ def score(r, avenidas, nodes, floors_by_id):
 
 
 def main():
+    global LISTINGS, OSM_FILE, OUT_FILE
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--district", default="pueblo-libre", help="slug en districts.json")
+    args = ap.parse_args()
+    LISTINGS = ROOT / f"listings_combined_{args.district}.jsonl"
+    OSM_FILE = ROOT / f"map_geo_{args.district}.json"
+    OUT_FILE = ROOT / f"ranking_{args.district}.jsonl"
+
     avenidas, nodes = load_osm()
     floors_by_id = load_floors_cache()
     print(

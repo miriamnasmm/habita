@@ -453,7 +453,7 @@ function reasonsOf(vm){
 }
 
 /* ---------- map ---------- */
-const map=L.map('map',{center:[-12.0748,-77.0628],zoom:15,zoomControl:false,scrollWheelZoom:true});
+const map=L.map('map',{center:[-12.0788,-77.0720],zoom:14,zoomControl:false,scrollWheelZoom:true});
 L.control.zoom({position:'topleft'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'}).addTo(map);
 map.createPane('labels'); map.getPane('labels').style.zIndex=450; map.getPane('labels').style.pointerEvents='none';
@@ -867,6 +867,12 @@ const DISTRICTS=[
   {id:'miraflores',name:'Miraflores',center:[-12.1211,-77.0290],zoom:14,data:false},
   {id:'cercado',name:'Cercado de Lima',center:[-12.0464,-77.0428],zoom:14,data:false}
 ];
+// Activa los distritos con data real (inyectados por build_map) y toma su centro de districts.json.
+(function(){
+  const A=(MAP_DATA&&MAP_DATA.active_districts)||['pueblo-libre'];
+  const C=(MAP_DATA&&MAP_DATA.districts)||{};
+  DISTRICTS.forEach(d=>{ d.data=A.indexOf(d.id)>=0; if(C[d.id]&&C[d.id].center){ d.center=C[d.id].center; d.zoom=C[d.id].zoom||d.zoom; } });
+})();
 function buildSearch(){
   const host=document.getElementById('search');
   host.innerHTML=`

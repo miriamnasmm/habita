@@ -1,0 +1,53 @@
+{
+  "pueblo-libre": {
+    "name": "Pueblo Libre",
+    "osm_name": "Pueblo Libre",
+    "urbania_slug": "pueblo-libre--lima--lima",
+    "bbox": [
+      -12.0867,
+      -12.0666,
+      -77.081,
+      -77.0497
+    ],
+    "center": [
+      -12.0748,
+      -77.0628
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "san-miguel": {
+    "name": "San Miguel",
+    "osm_name": "San Miguel",
+    "urbania_slug": "san-miguel--lima--lima",
+    "bbox": [
+      -12.0979,
+      -12.0602,
+      -77.112,
+      -77.0714
+    ],
+    "center": [
+      -12.0791,
+      -77.0948
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "jesus-maria": {
+    "name": "Jesús María",
+    "osm_name": "Jesús María",
+    "urbania_slug": "jesus-maria--lima--lima",
+    "bbox": [
+      -12.0931,
+      -12.0644,
+      -77.0631,
+      -77.0363
+    ],
+    "center": [
+      -12.0782,
+      -77.0464
+    ],
+    "zoom": 15,
+    "data": true
+  }
+}

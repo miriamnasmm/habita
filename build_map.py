@@ -199,79 +199,88 @@ def trim_commerce(osm):
             if "lat" in n and "lon" in n]
 
 
-def main():
-    no_thumbs = "--no-thumbs" in sys.argv
-    serve = "--serve" in sys.argv
+MAP_DATA_SENTINEL = "/*<MAP_DATA>*/null/*</MAP_DATA>*/"
+MAP_GEO_SENTINEL = "/*__MAP_GEO__*/{}/*__/MAP_GEO__*/"
+GEO_DISPLAY_KEYS = ("parks", "schools", "health", "stroads")  # lo demás (commerce/bus/crossings) es solo para rank.py
 
-    listings = load_jsonl(RANKING)
-    floors = load_jsonl(FLOORS_CACHE)
+
+def build_district_data(slug, no_thumbs):
+    """Construye map_data_<slug>.json desde ranking_<slug>.jsonl (listings + thumbs)."""
+    ranking = ROOT / f"ranking_{slug}.jsonl"
+    listings = load_jsonl(ranking)
+    floors = load_jsonl(FLOORS_CACHE) if FLOORS_CACHE.exists() else []
     floors_idx = {f["id"]: f for f in floors}
-    osm = json.loads(OSM_FILE.read_text())
-
-    print(f"Loaded {len(listings)} listings, {len(floors)} floor rows, "
-          f"{len(osm.get('avenidas') or [])} avenidas.")
-
     if not no_thumbs:
         try:
             import PIL  # noqa: F401
         except ImportError:
-            print("Pillow not installed - run `pip install Pillow` in venv, or pass --no-thumbs.")
-            sys.exit(2)
+            print("Pillow no instalado; pasa --no-thumbs."); sys.exit(2)
         build_thumbs(listings)
-    else:
-        print("Skipping thumbnail generation (--no-thumbs).")
+    trimmed = [trim_listing(r, floors_idx) for r in listings]
+    for t in trimmed:
+        t["district"] = slug
+    out = ROOT / f"map_data_{slug}.json"
+    out.write_text(json.dumps({"listings": trimmed}, ensure_ascii=False, separators=(",", ":")))
+    print(f"Wrote {out.name}: {len(trimmed)} listings")
 
-    trimmed_listings = [trim_listing(r, floors_idx) for r in listings]
-    comps = [r["_score"]["composite"] for r in listings]
+
+def combine_and_render():
+    """Junta todos los distritos con data:true en un solo map.html (listings + geo concatenados)."""
+    cfg = json.loads((ROOT / "districts.json").read_text())
+    active = [s for s, d in cfg.items() if d.get("data")]
+    all_listings = []
+    geo = {k: [] for k in GEO_DISPLAY_KEYS}
+    for s in active:
+        md = ROOT / f"map_data_{s}.json"
+        if md.exists():
+            all_listings += json.loads(md.read_text()).get("listings", [])
+        g = ROOT / f"map_geo_{s}.json"
+        if g.exists():
+            gj = json.loads(g.read_text())
+            for k in GEO_DISPLAY_KEYS:
+                geo[k] += gj.get(k, [])
+    comps = [r["_score"]["composite"] for r in all_listings if r.get("_score")]
     score_range = [min(comps), max(comps)] if comps else [0.0, 1.0]
-
     data = {
-        "listings": trimmed_listings,
-        "parks": PARKS,
-        "avenidas": trim_avenidas(osm),
-        "conn_points": CONN_POINTS,
-        "commerce": trim_commerce(osm),
+        "listings": all_listings,
         "score_range": score_range,
-        "counts": {
-            "listings": len(trimmed_listings),
-            "avenidas": len(osm.get("avenidas") or []),
-            "commerce": len(osm.get("commerce") or []),
-            "parks": len(PARKS),
-        },
+        "districts": cfg,
+        "active_districts": active,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
-
     data_json = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     OUT_DATA.write_text(data_json)
-    size_kb = OUT_DATA.stat().st_size / 1024
-    print(f"Wrote {OUT_DATA.name} ({size_kb:.1f} KB)")
+    geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
 
     template = TEMPLATE.read_text()
-    sentinel = "/*<MAP_DATA>*/null/*</MAP_DATA>*/"
-    if sentinel not in template:
-        print("ERROR: template missing MAP_DATA sentinel.", file=sys.stderr)
-        sys.exit(1)
-    html = template.replace(sentinel, data_json)
-
-    # Inject real OSM geometry (parks polygons + noisy avenues) if present.
-    geo_path = ROOT / "map_geo.json"
-    geo_sentinel = "/*__MAP_GEO__*/{}/*__/MAP_GEO__*/"
-    if geo_sentinel in template:
-        geo_json = geo_path.read_text() if geo_path.exists() else "{}"
-        html = html.replace(geo_sentinel, "/*__MAP_GEO__*/" + geo_json + "/*__/MAP_GEO__*/")
-        if geo_path.exists():
-            print(f"Injected map_geo.json ({geo_path.stat().st_size/1024:.1f} KB)")
-
+    if MAP_DATA_SENTINEL not in template:
+        print("ERROR: template missing MAP_DATA sentinel.", file=sys.stderr); sys.exit(1)
+    html = template.replace(MAP_DATA_SENTINEL, data_json)
+    if MAP_GEO_SENTINEL in template:
+        html = html.replace(MAP_GEO_SENTINEL, "/*__MAP_GEO__*/" + geo_json + "/*__/MAP_GEO__*/")
     OUT_HTML.write_text(html)
-    html_kb = OUT_HTML.stat().st_size / 1024
-    print(f"Wrote {OUT_HTML.name} ({html_kb:.1f} KB)")
+    print(f"Wrote {OUT_HTML.name} ({OUT_HTML.stat().st_size/1024:.1f} KB) — "
+          f"{len(all_listings)} listings, distritos: {active}")
 
-    if serve:
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--district", default=None, help="construir map_data_<slug>.json para un distrito")
+    ap.add_argument("--no-thumbs", action="store_true")
+    ap.add_argument("--serve", action="store_true")
+    args = ap.parse_args()
+
+    if args.district:
+        build_district_data(args.district, args.no_thumbs)
+    else:
+        combine_and_render()
+
+    if args.serve:
         print("Starting http.server on :8765 ...")
         subprocess.Popen([sys.executable, "-m", "http.server", "8765"], cwd=ROOT)
         time.sleep(1)
         webbrowser.open("http://localhost:8765/map.html")
-        print("Server running. Ctrl+C to stop.")
         try:
             while True:
                 time.sleep(3600)
