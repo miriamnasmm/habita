@@ -1082,7 +1082,7 @@ function buildDistrictBoundary(){
   rings.forEach(ring=>L.polygon(ring,{pane:'district',fill:false,color:'#C2562F',weight:2.4,opacity:.9,dashArray:'2 7',lineCap:'round',lineJoin:'round',interactive:false}).addTo(map));
 }
 function buildGeoLayers(){
-  buildDistrictBoundary();
+  // buildDistrictBoundary();  // límites distritales desactivados (a pedido del dueño)
   (MAP_GEO.stroads||[]).forEach(av=>{
     const w=av.severity==='HIGH'?7:4;
     L.polyline(av.path,{className:'hb-stroad',weight:w,opacity:.7,lineCap:'round'}).bindTooltip('Av. ruidosa: '+av.name,{sticky:true}).addTo(stroadsLayer);
