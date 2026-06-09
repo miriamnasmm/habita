@@ -249,17 +249,18 @@ def combine_and_render():
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     data_json = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-    OUT_DATA.write_text(data_json)
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
+    OUT_DATA.write_text(data_json)  # map_data.json (referencia)
 
-    template = TEMPLATE.read_text()
-    if MAP_DATA_SENTINEL not in template:
-        print("ERROR: template missing MAP_DATA sentinel.", file=sys.stderr); sys.exit(1)
-    html = template.replace(MAP_DATA_SENTINEL, data_json)
-    if MAP_GEO_SENTINEL in template:
-        html = html.replace(MAP_GEO_SENTINEL, "/*__MAP_GEO__*/" + geo_json + "/*__/MAP_GEO__*/")
-    OUT_HTML.write_text(html)
-    print(f"Wrote {OUT_HTML.name} ({OUT_HTML.stat().st_size/1024:.1f} KB) — "
+    # Datos externos: el HTML los carga con <script src> → HTML chico, carga
+    # rápida (con loader) y escala a muchos distritos sin inflar el HTML.
+    (ROOT / "map_data.js").write_text("window.MAP_DATA = " + data_json + ";\n")
+    (ROOT / "map_geo.js").write_text("window.MAP_GEO = " + geo_json + ";\n")
+    OUT_HTML.write_text(TEMPLATE.read_text())  # plantilla tal cual (sin inyección)
+
+    html_kb = OUT_HTML.stat().st_size / 1024
+    data_kb = (ROOT / "map_data.js").stat().st_size / 1024
+    print(f"Wrote map.html ({html_kb:.1f} KB) + map_data.js ({data_kb:.1f} KB) + map_geo.js — "
           f"{len(all_listings)} listings, distritos: {active}")
 
 

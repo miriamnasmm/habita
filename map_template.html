@@ -306,6 +306,11 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-coverage-card button:hover{background:var(--clay-deep)}
 .is-mobile .hb-search{left:14px;right:14px;width:auto;max-width:none}
 .is-mobile .leaflet-top.leaflet-left{top:62px}
+/* boot loader (mientras carga map_data.js) */
+#boot-loader{position:fixed;inset:0;z-index:9999;background:var(--cream);display:flex;align-items:center;justify-content:center}
+#boot-loader .boot-inner{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted);font-size:.95rem}
+#boot-loader .boot-logo{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,var(--clay),var(--clay-deep));display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-weight:600;font-size:1.7rem;box-shadow:var(--shadow);animation:bootpulse 1.1s ease-in-out infinite}
+@keyframes bootpulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
 </style>
 </head>
 <body>
@@ -332,10 +337,12 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
     <div id="detail-host"></div>
   </div>
 </div>
+<div id="boot-loader"><div class="boot-inner"><div class="boot-logo">H</div><span>Cargando Habita…</span></div></div>
 
-<script>window.MAP_GEO = /*__MAP_GEO__*/{}/*__/MAP_GEO__*/;</script>
+<script src="map_geo.js"></script>
+<script src="map_data.js"></script>
 <script>
-const MAP_DATA = /*<MAP_DATA>*/null/*</MAP_DATA>*/;
+const MAP_DATA = window.MAP_DATA || {listings:[],score_range:[0,1],districts:{},active_districts:[]};
 
 /* ---------- helpers ---------- */
 const clamp = (v,a=0,b=100)=>Math.max(a,Math.min(b,v));
@@ -1009,6 +1016,7 @@ renderParks(state.parkStyle);
 schoolsLayer.addTo(map);
 const _mec=document.getElementById('map-empty-clear'); if(_mec) _mec.onclick=clearFilters;
 checkMobile();
+const _bl=document.getElementById('boot-loader'); if(_bl) _bl.remove();
 </script>
 </body>
 </html>
