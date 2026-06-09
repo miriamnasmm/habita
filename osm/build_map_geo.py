@@ -162,6 +162,44 @@ def lines_from(osm):
     return out
 
 
+def _close(a, b, eps=2e-4):
+    return abs(a[0] - b[0]) < eps and abs(a[1] - b[1]) < eps
+
+
+def boundary_query(osm_name):
+    return f'[out:json][timeout:120];relation["name"="{osm_name}"]["boundary"="administrative"];out geom;'
+
+
+def boundary_ring(osm):
+    """Cose los ways de la relación admin en un anillo ordenado [[lat,lng],...]."""
+    segs = []
+    for el in osm.get("elements", []):
+        if el.get("type") == "relation":
+            for m in el.get("members", []):
+                g = m.get("geometry")
+                if g and len(g) >= 2:
+                    segs.append([(p["lat"], p["lon"]) for p in g])
+        elif el.get("type") == "way" and el.get("geometry") and len(el["geometry"]) >= 2:
+            segs.append([(p["lat"], p["lon"]) for p in el["geometry"]])
+    segs = [s for s in segs if _in_bbox(*_centroid(s))]   # descarta homónimos
+    if not segs:
+        return []
+    ring = list(segs.pop(0))
+    changed = True
+    while segs and changed:
+        changed = False
+        for i, s in enumerate(segs):
+            if _close(s[0], ring[-1]):
+                ring += s[1:]; segs.pop(i); changed = True; break
+            if _close(s[-1], ring[-1]):
+                ring += list(reversed(s))[1:]; segs.pop(i); changed = True; break
+            if _close(s[-1], ring[0]):
+                ring = s[:-1] + ring; segs.pop(i); changed = True; break
+            if _close(s[0], ring[0]):
+                ring = list(reversed(s))[:-1] + ring; segs.pop(i); changed = True; break
+    return [[round(la, 6), round(ln, 6)] for la, ln in ring]
+
+
 def stroads_from(osm):
     sev = {"trunk": "HIGH", "primary": "HIGH", "secondary": "MODERATE"}
     out = []
@@ -217,11 +255,14 @@ def main():
     stroads = []
     if not args.no_roads:
         print("Overpass (avenidas)…", file=sys.stderr)
-        stroads = stroads_from(overpass(ROADS_Q))
+        stroads = stroads_from(overpass(ROADS_Q)); time.sleep(2)
+    print("Overpass (límite del distrito)…", file=sys.stderr)
+    boundary = boundary_ring(overpass(boundary_query(d["osm_name"])))
 
     result = {"parks": parks, "schools": schools, "health": health, "stroads": stroads,
               "commerce": commerce, "bus": bus, "crossings": crossings,
-              "police": police, "markets": markets, "cycleways": cycleways}
+              "police": police, "markets": markets, "cycleways": cycleways,
+              "boundary": boundary}
     for key, filt, name in EXTRA_POI:
         print(f"Overpass ({key})…", file=sys.stderr)
         result[key] = points_from(overpass(extra_query(d["osm_name"], filt)), name)

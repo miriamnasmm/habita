@@ -231,6 +231,7 @@ def combine_and_render():
     active = [s for s, d in cfg.items() if d.get("data")]
     all_listings = []
     geo = {k: [] for k in GEO_DISPLAY_KEYS}
+    boundaries = []
     for s in active:
         md = ROOT / f"map_data_{s}.json"
         if md.exists():
@@ -240,6 +241,10 @@ def combine_and_render():
             gj = json.loads(g.read_text())
             for k in GEO_DISPLAY_KEYS:
                 geo[k] += gj.get(k, [])
+            b = gj.get("boundary")
+            if b and len(b) >= 3:
+                boundaries.append(b)
+    geo["boundaries"] = boundaries  # lista de anillos (uno por distrito activo)
     comps = [r["_score"]["composite"] for r in all_listings if r.get("_score")]
     score_range = [min(comps), max(comps)] if comps else [0.0, 1.0]
     data = {
