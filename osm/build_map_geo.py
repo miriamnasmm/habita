@@ -69,10 +69,10 @@ def queries(osm_name):
 # Capas POI extra (todas son puntos, solo display). (clave, filtro overpass, nombre-fallback)
 EXTRA_POI = [
     ("malls", 'node["shop"="mall"](area.a);way["shop"="mall"](area.a);node["shop"="department_store"](area.a);way["shop"="department_store"](area.a);', "Mall"),
-    ("gyms", 'node["leisure"~"^(fitness_centre|sports_centre)$"](area.a);way["leisure"~"^(fitness_centre|sports_centre)$"](area.a);', "Deporte"),
     ("banks", 'node["amenity"="bank"](area.a);way["amenity"="bank"](area.a);', "Banco"),
     ("universities", 'node["amenity"~"^(university|college)$"](area.a);way["amenity"~"^(university|college)$"](area.a);', "Universidad"),
-    ("culture", 'node["amenity"~"^(cinema|theatre|arts_centre|library)$"](area.a);way["amenity"~"^(cinema|theatre|arts_centre|library)$"](area.a);node["tourism"="museum"](area.a);way["tourism"="museum"](area.a);', "Cultura"),
+    ("pharmacies", 'node["amenity"="pharmacy"](area.a);way["amenity"="pharmacy"](area.a);', "Farmacia"),
+    ("kindergarten", 'node["amenity"="kindergarten"](area.a);way["amenity"="kindergarten"](area.a);', "Nido"),
 ]
 
 
