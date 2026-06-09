@@ -66,6 +66,21 @@ def queries(osm_name):
     return parks, schools, health, roads, commerce, bus, crossings, police, markets, cycleways
 
 
+# Capas POI extra (todas son puntos, solo display). (clave, filtro overpass, nombre-fallback)
+EXTRA_POI = [
+    ("malls", 'node["shop"="mall"](area.a);way["shop"="mall"](area.a);node["shop"="department_store"](area.a);way["shop"="department_store"](area.a);', "Mall"),
+    ("gyms", 'node["leisure"~"^(fitness_centre|sports_centre)$"](area.a);way["leisure"~"^(fitness_centre|sports_centre)$"](area.a);', "Deporte"),
+    ("banks", 'node["amenity"="bank"](area.a);way["amenity"="bank"](area.a);', "Banco"),
+    ("universities", 'node["amenity"~"^(university|college)$"](area.a);way["amenity"~"^(university|college)$"](area.a);', "Universidad"),
+    ("culture", 'node["amenity"~"^(cinema|theatre|arts_centre|library)$"](area.a);way["amenity"~"^(cinema|theatre|arts_centre|library)$"](area.a);node["tourism"="museum"](area.a);way["tourism"="museum"](area.a);', "Cultura"),
+]
+
+
+def extra_query(osm_name, filt):
+    area = f'area["name"="{osm_name}"]["boundary"="administrative"]->.a;'
+    return f'[out:json][timeout:90];{area}({filt});out tags center;'
+
+
 def overpass(query):
     data = urllib.parse.urlencode({"data": query}).encode()
     last = None
@@ -207,6 +222,10 @@ def main():
     result = {"parks": parks, "schools": schools, "health": health, "stroads": stroads,
               "commerce": commerce, "bus": bus, "crossings": crossings,
               "police": police, "markets": markets, "cycleways": cycleways}
+    for key, filt, name in EXTRA_POI:
+        print(f"Overpass ({key})…", file=sys.stderr)
+        result[key] = points_from(overpass(extra_query(d["osm_name"], filt)), name)
+        time.sleep(2)
     out_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
     print(f"OK → {out_path.name}: {len(parks)} parques, {len(schools)} colegios, {len(health)} salud, "
           f"{len(stroads)} avenidas, {len(commerce)} comercio, {len(bus)} bus, {len(crossings)} cruces, "
