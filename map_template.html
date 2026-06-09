@@ -191,7 +191,10 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-layers{background:#fff;border-radius:13px;box-shadow:var(--shadow-sm);border:1px solid var(--line);width:206px;overflow:hidden}
 .hb-layers.floating{position:absolute;top:196px;right:14px;z-index:500}
 .hb-layers-head{display:flex;align-items:center;gap:8px;padding:10px 13px;font-size:.7rem;
-  text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+  text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;
+  cursor:move;cursor:grab;touch-action:none;user-select:none}
+.hb-layers.dragging{box-shadow:var(--shadow);opacity:.97}
+.hb-layers.dragging .hb-layers-head{cursor:grabbing}
 .hb-layers-head svg{color:var(--clay)}
 .hb-layers-body{display:flex;flex-direction:column;border-top:1px solid var(--line-2);max-height:62vh;overflow-y:auto}
 /* grupos colapsables de capas */
@@ -1211,6 +1214,37 @@ function buildLayers(){
   });
   const fab=document.getElementById('layers-fab');
   if(fab) fab.onclick=()=>document.getElementById('layers').classList.toggle('open');
+  makeLayersDraggable();
+}
+/* arrastrar el panel "Capas del mapa" por la pantalla (agarrándolo del título) */
+function makeLayersDraggable(){
+  const panel=document.getElementById('layers');
+  const handle=panel&&panel.querySelector('.hb-layers-head');
+  if(!panel||!handle) return;
+  handle.title='Arrastra para mover el panel';
+  let drag=false,sx,sy,sl,st;
+  const op=()=>(panel.offsetParent||document.body).getBoundingClientRect();
+  handle.addEventListener('pointerdown',e=>{
+    if(e.button)return;                                   // solo botón primario
+    const pr=panel.getBoundingClientRect(), o=op();
+    sl=pr.left-o.left; st=pr.top-o.top;
+    panel.style.left=sl+'px'; panel.style.top=st+'px';    // pasar de right/top a left/top
+    panel.style.right='auto'; panel.style.bottom='auto';
+    sx=e.clientX; sy=e.clientY; drag=true; panel.classList.add('dragging');
+    try{handle.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault(); e.stopPropagation();              // que no arrastre el mapa
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const pr=panel.getBoundingClientRect(), o=op();
+    let nl=sl+(e.clientX-sx), nt=st+(e.clientY-sy);
+    nl=Math.max(4,Math.min(o.width-pr.width-4,nl));        // mantener dentro del mapa
+    nt=Math.max(4,Math.min(o.height-pr.height-4,nt));
+    panel.style.left=nl+'px'; panel.style.top=nt+'px';
+  });
+  const end=e=>{ drag=false; panel.classList.remove('dragging'); try{handle.releasePointerCapture(e.pointerId);}catch(_){} };
+  handle.addEventListener('pointerup',end);
+  handle.addEventListener('pointercancel',end);
 }
 
 /* ---------- lista de resultados (orden · estados · acciones) ---------- */
