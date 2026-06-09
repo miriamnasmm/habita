@@ -1216,14 +1216,24 @@ function buildLayers(){
   if(fab) fab.onclick=()=>document.getElementById('layers').classList.toggle('open');
   makeLayersDraggable();
 }
-/* arrastrar el panel "Capas del mapa" por la pantalla (agarrándolo del título) */
+/* arrastrar el panel "Capas del mapa" por la pantalla; recuerda la posición
+   (localStorage) y doble-click en el título lo regresa a su esquina */
+const LAYERS_POS_KEY='hb_layers_pos';
 function makeLayersDraggable(){
   const panel=document.getElementById('layers');
   const handle=panel&&panel.querySelector('.hb-layers-head');
   if(!panel||!handle) return;
-  handle.title='Arrastra para mover el panel';
+  handle.title='Arrastra para mover · doble-click para regresar';
   let drag=false,sx,sy,sl,st;
   const op=()=>(panel.offsetParent||document.body).getBoundingClientRect();
+  const setPos=(l,t)=>{ const o=op(),pr=panel.getBoundingClientRect();
+    l=Math.max(4,Math.min(o.width-pr.width-4,l)); t=Math.max(4,Math.min(o.height-pr.height-4,t));
+    panel.style.left=l+'px'; panel.style.top=t+'px'; panel.style.right='auto'; panel.style.bottom='auto'; return [l,t]; };
+  const resetPos=()=>{ try{localStorage.removeItem(LAYERS_POS_KEY);}catch(_){}
+    panel.style.left=panel.style.top=panel.style.right=panel.style.bottom=''; };  // vuelve al CSS por defecto (esquina)
+  // aplicar posición guardada al cargar
+  try{ const s=JSON.parse(localStorage.getItem(LAYERS_POS_KEY)||'null');
+    if(s&&typeof s.left==='number') setPos(s.left,s.top); }catch(_){}
   handle.addEventListener('pointerdown',e=>{
     if(e.button)return;                                   // solo botón primario
     const pr=panel.getBoundingClientRect(), o=op();
@@ -1236,15 +1246,17 @@ function makeLayersDraggable(){
   });
   handle.addEventListener('pointermove',e=>{
     if(!drag)return;
-    const pr=panel.getBoundingClientRect(), o=op();
-    let nl=sl+(e.clientX-sx), nt=st+(e.clientY-sy);
-    nl=Math.max(4,Math.min(o.width-pr.width-4,nl));        // mantener dentro del mapa
-    nt=Math.max(4,Math.min(o.height-pr.height-4,nt));
-    panel.style.left=nl+'px'; panel.style.top=nt+'px';
+    setPos(sl+(e.clientX-sx), st+(e.clientY-sy));          // mantener dentro del mapa
   });
-  const end=e=>{ drag=false; panel.classList.remove('dragging'); try{handle.releasePointerCapture(e.pointerId);}catch(_){} };
+  const end=e=>{
+    if(drag){ const l=parseFloat(panel.style.left)||0, t=parseFloat(panel.style.top)||0;
+      try{localStorage.setItem(LAYERS_POS_KEY,JSON.stringify({left:l,top:t}));}catch(_){} }  // recordar
+    drag=false; panel.classList.remove('dragging');
+    try{handle.releasePointerCapture(e.pointerId);}catch(_){}
+  };
   handle.addEventListener('pointerup',end);
   handle.addEventListener('pointercancel',end);
+  handle.addEventListener('dblclick',resetPos);           // doble-click = regresar a la esquina
 }
 
 /* ---------- lista de resultados (orden · estados · acciones) ---------- */
