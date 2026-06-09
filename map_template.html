@@ -1452,15 +1452,14 @@ const LEGEND_NOTES={
 };
 const LEGEND_LINES={ cycleways:['#2E9E8F','Ciclovía'], stroads:['#B6452B','Avenida ruidosa'] };
 function legendInner(){
-  const N=24, segs=[];
-  for(let i=0;i<N;i++) segs.push(`<i style="background:${scoreColor((i/(N-1))*100)}"></i>`);
+  // sin barra de Habitabilidad (se quitó junto con el mapa de calor); solo notas de símbolos visibles
   let notes=`<div class="hb-legend-note"><span class="dash"></span> En construcción</div>`;
   if(layerState.parks) notes+=`<div class="hb-legend-note"><span class="lg-park"></span> Parque</div>`;
   for(const k in LEGEND_NOTES){ if(layerState[k]){ const[c,l]=LEGEND_NOTES[k];
     notes+=`<div class="hb-legend-note"><span class="lg-dot" style="background:${c}"></span> ${l}</div>`; } }
   for(const k in LEGEND_LINES){ if(layerState[k]){ const[c,l]=LEGEND_LINES[k];
     notes+=`<div class="hb-legend-note"><span class="lg-line" style="border-top-color:${c}"></span> ${l}</div>`; } }
-  return `<div class="hb-legend-title">Habitabilidad</div><div class="hb-legend-bar">${segs.join('')}</div><div class="hb-legend-scale"><span>40</span><span>60</span><span>80+</span></div>${notes}`;
+  return notes;
 }
 function buildLegend(){
   const html=legendInner();
