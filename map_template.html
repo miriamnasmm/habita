@@ -196,6 +196,10 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-layers.dragging{box-shadow:var(--shadow);opacity:.97}
 .hb-layers.dragging .hb-layers-head{cursor:grabbing}
 .hb-layers-head svg{color:var(--clay)}
+.hb-layers-resize{position:absolute;right:1px;bottom:1px;width:16px;height:16px;cursor:nwse-resize;z-index:3;touch-action:none}
+.hb-layers-resize::before{content:"";position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);opacity:.45;border-bottom-right-radius:3px}
+.hb-layers-resize:hover::before{opacity:.85}
+.is-mobile .hb-layers-resize{display:none}
 .hb-layers-body{display:flex;flex-direction:column;border-top:1px solid var(--line-2);max-height:62vh;overflow-y:auto}
 /* grupos colapsables de capas */
 .hb-lgroup{border-bottom:1px solid var(--line-2)}
@@ -1196,7 +1200,8 @@ function buildLayers(){
   document.getElementById('layers').innerHTML=`
     <button class="hb-layers-fab" id="layers-fab">${icon('layers',16)} Capas</button>
     <div class="hb-layers-head">${icon('layers',14)} Capas del mapa</div>
-    <div class="hb-layers-body">${body}</div>`;
+    <div class="hb-layers-body">${body}</div>
+    <div class="hb-layers-resize" id="layers-resize" title="Arrastra para ajustar el tamaño"></div>`;
   // headers colapsables
   document.querySelectorAll('.hb-lgroup-head').forEach(h=>h.onclick=()=>{
     const cat=h.dataset.gcat; groupOpen[cat]=!groupOpen[cat];
@@ -1216,47 +1221,75 @@ function buildLayers(){
   if(fab) fab.onclick=()=>document.getElementById('layers').classList.toggle('open');
   makeLayersDraggable();
 }
-/* arrastrar el panel "Capas del mapa" por la pantalla; recuerda la posición
-   (localStorage) y doble-click en el título lo regresa a su esquina */
+/* arrastrar Y redimensionar el panel "Capas del mapa"; recuerda posición + tamaño
+   (localStorage). Doble-click en el título lo regresa a su esquina y tamaño por defecto. */
 const LAYERS_POS_KEY='hb_layers_pos';
 function makeLayersDraggable(){
   const panel=document.getElementById('layers');
   const handle=panel&&panel.querySelector('.hb-layers-head');
+  const grip=panel&&panel.querySelector('.hb-layers-resize');
+  const bodyEl=panel&&panel.querySelector('.hb-layers-body');
   if(!panel||!handle) return;
   handle.title='Arrastra para mover · doble-click para regresar';
-  let drag=false,sx,sy,sl,st;
   const op=()=>(panel.offsetParent||document.body).getBoundingClientRect();
+  const clampW=w=>Math.max(165,Math.min(360,w));                          // ancho min/max
+  const clampH=h=>Math.max(70,Math.min(Math.round(window.innerHeight*0.75),h)); // alto del cuerpo
   const setPos=(l,t)=>{ const o=op(),pr=panel.getBoundingClientRect();
     l=Math.max(4,Math.min(o.width-pr.width-4,l)); t=Math.max(4,Math.min(o.height-pr.height-4,t));
     panel.style.left=l+'px'; panel.style.top=t+'px'; panel.style.right='auto'; panel.style.bottom='auto'; return [l,t]; };
+  const anchorLeftTop=()=>{ const pr=panel.getBoundingClientRect(), o=op();   // pasa de right/top a left/top
+    panel.style.left=(pr.left-o.left)+'px'; panel.style.top=(pr.top-o.top)+'px';
+    panel.style.right='auto'; panel.style.bottom='auto'; };
+  const save=patch=>{ let s={}; try{s=JSON.parse(localStorage.getItem(LAYERS_POS_KEY)||'{}')||{};}catch(_){}
+    Object.assign(s,patch); try{localStorage.setItem(LAYERS_POS_KEY,JSON.stringify(s));}catch(_){} };  // fusiona pos+tamaño
   const resetPos=()=>{ try{localStorage.removeItem(LAYERS_POS_KEY);}catch(_){}
-    panel.style.left=panel.style.top=panel.style.right=panel.style.bottom=''; };  // vuelve al CSS por defecto (esquina)
-  // aplicar posición guardada al cargar
+    panel.style.left=panel.style.top=panel.style.right=panel.style.bottom=panel.style.width='';
+    if(bodyEl) bodyEl.style.maxHeight=''; };                              // vuelve al CSS por defecto
+  // aplicar tamaño + posición guardados al cargar
   try{ const s=JSON.parse(localStorage.getItem(LAYERS_POS_KEY)||'null');
-    if(s&&typeof s.left==='number') setPos(s.left,s.top); }catch(_){}
+    if(s){ if(s.w) panel.style.width=clampW(s.w)+'px';
+           if(bodyEl&&s.h) bodyEl.style.maxHeight=clampH(s.h)+'px';
+           if(typeof s.left==='number') setPos(s.left,s.top); } }catch(_){}
+
+  /* --- mover (agarrando el título) --- */
+  let drag=false,sx,sy,sl,st;
   handle.addEventListener('pointerdown',e=>{
     if(e.button)return;                                   // solo botón primario
-    const pr=panel.getBoundingClientRect(), o=op();
-    sl=pr.left-o.left; st=pr.top-o.top;
-    panel.style.left=sl+'px'; panel.style.top=st+'px';    // pasar de right/top a left/top
-    panel.style.right='auto'; panel.style.bottom='auto';
-    sx=e.clientX; sy=e.clientY; drag=true; panel.classList.add('dragging');
+    anchorLeftTop(); const pr=panel.getBoundingClientRect(), o=op();
+    sl=pr.left-o.left; st=pr.top-o.top; sx=e.clientX; sy=e.clientY;
+    drag=true; panel.classList.add('dragging');
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault(); e.stopPropagation();              // que no arrastre el mapa
   });
-  handle.addEventListener('pointermove',e=>{
-    if(!drag)return;
-    setPos(sl+(e.clientX-sx), st+(e.clientY-sy));          // mantener dentro del mapa
-  });
-  const end=e=>{
-    if(drag){ const l=parseFloat(panel.style.left)||0, t=parseFloat(panel.style.top)||0;
-      try{localStorage.setItem(LAYERS_POS_KEY,JSON.stringify({left:l,top:t}));}catch(_){} }  // recordar
-    drag=false; panel.classList.remove('dragging');
-    try{handle.releasePointerCapture(e.pointerId);}catch(_){}
-  };
-  handle.addEventListener('pointerup',end);
-  handle.addEventListener('pointercancel',end);
-  handle.addEventListener('dblclick',resetPos);           // doble-click = regresar a la esquina
+  handle.addEventListener('pointermove',e=>{ if(drag) setPos(sl+(e.clientX-sx), st+(e.clientY-sy)); });
+  const endDrag=e=>{ if(drag) save({left:parseFloat(panel.style.left)||0, top:parseFloat(panel.style.top)||0});
+    drag=false; panel.classList.remove('dragging'); try{handle.releasePointerCapture(e.pointerId);}catch(_){} };
+  handle.addEventListener('pointerup',endDrag);
+  handle.addEventListener('pointercancel',endDrag);
+  handle.addEventListener('dblclick',resetPos);           // doble-click = regresar
+
+  /* --- redimensionar (esquina inferior derecha): ancho + alto --- */
+  if(grip){
+    let rz=false,rsx,rsy,rsw,rsh;
+    grip.addEventListener('pointerdown',e=>{
+      if(e.button)return;
+      anchorLeftTop();                                    // que el borde derecho siga al cursor
+      const pr=panel.getBoundingClientRect();
+      rsx=e.clientX; rsy=e.clientY; rsw=pr.width; rsh=bodyEl?bodyEl.getBoundingClientRect().height:0;
+      rz=true; panel.classList.add('dragging');
+      try{grip.setPointerCapture(e.pointerId);}catch(_){}
+      e.preventDefault(); e.stopPropagation();
+    });
+    grip.addEventListener('pointermove',e=>{
+      if(!rz)return;
+      panel.style.width=clampW(rsw+(e.clientX-rsx))+'px';                 // delgado/ancho
+      if(bodyEl) bodyEl.style.maxHeight=clampH(rsh+(e.clientY-rsy))+'px'; // chiquito/alto
+    });
+    const endRz=e=>{ if(rz) save({w:parseFloat(panel.style.width)||undefined, h:bodyEl?(parseFloat(bodyEl.style.maxHeight)||undefined):undefined});
+      rz=false; panel.classList.remove('dragging'); try{grip.releasePointerCapture(e.pointerId);}catch(_){} };
+    grip.addEventListener('pointerup',endRz);
+    grip.addEventListener('pointercancel',endRz);
+  }
 }
 
 /* ---------- lista de resultados (orden · estados · acciones) ---------- */
