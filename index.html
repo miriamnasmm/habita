@@ -367,8 +367,9 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-fbtn.on{border-color:var(--clay);background:#FCEFE6}
 .hb-fbtn svg{color:var(--clay)}
 .hb-fbadge{background:var(--clay);color:#fff;font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
-.hb-fclear{font-size:.82rem;font-weight:600;color:var(--muted);padding:6px 4px}
-.hb-fclear:hover{color:var(--clay)}
+.hb-fclear{font-size:.82rem;font-weight:600;color:var(--muted);padding:6px 4px;background:none;border:none;cursor:pointer;transition:color .14s}
+.hb-fclear:hover:not(:disabled){color:var(--clay)}
+.hb-fclear:disabled{opacity:.4;cursor:default;pointer-events:none}
 #filters .hb-filters{padding-top:6px}
 #results-pane{padding-top:10px}
 /* barra de orden */
@@ -955,7 +956,7 @@ function renderFilterbar(){
   document.getElementById('filterbar').innerHTML=`<div class="hb-filterbar">
     <button class="hb-fbtn ${state.showFilters?'on':''}" id="fbtn">${icon('sliders',15)}<span>Filtros</span>${active?`<span class="hb-fbadge">${active}</span>`:''}</button>
     <button class="hb-savedtog ${state.showSaved?'on':''}" id="savedtog">${icon('heart',15,state.showSaved?'currentColor':'none')}<span>Guardadas</span>${saved?`<span class="hb-fbadge alt">${saved}</span>`:''}</button>
-    ${active?`<button class="hb-fclear" id="fclear">Limpiar</button>`:''}
+    <button class="hb-fclear" id="fclear" ${active?'':'disabled'}>Limpiar</button>
   </div>`;
   document.getElementById('fbtn').onclick=()=>{
     state.showFilters=!state.showFilters;
