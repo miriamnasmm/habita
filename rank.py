@@ -91,6 +91,7 @@ HL_STROAD = 65  # ~one Pueblo Libre block, matches CNOSSOS-EU ~6dB/block
 HL_METRO = 600
 HL_DEST = 500
 HL_HEALTH = 300
+HL_POLICE = 700  # seguridad: cercanía a comisaría (proxy), decaimiento ~700m
 
 STROAD_HARD_CUTOFF = 250  # beyond this, no stroad penalty
 
@@ -163,6 +164,8 @@ def load_osm():
                       if isinstance(q, (list, tuple)) and len(q) >= 2]
     nodes["health"] = [(h["lat"], h["lng"]) for h in data.get("health", [])
                        if h.get("lat") is not None and h.get("lng") is not None]
+    nodes["police"] = [(p["lat"], p["lng"]) for p in data.get("police", [])
+                       if p.get("lat") is not None and p.get("lng") is not None]
     return avenidas, nodes
 
 
@@ -505,6 +508,13 @@ def score(r, avenidas, nodes, floors_by_id):
     else:
         health_score = math.exp(-d_health * math.log(2) / HL_HEALTH)
 
+    # Seguridad (proxy): cercanía a la comisaría más cercana
+    d_police = nearest_distance(lat, lng, nodes.get("police", []))
+    if d_police is None or d_police > 2500:
+        security_score = 0.0
+    else:
+        security_score = math.exp(-d_police * math.log(2) / HL_POLICE)
+
     # Crossings within 200m, cap=15
     n_cross = count_within(lat, lng, nodes["crossings"], 200)
     cross_score = log_norm(n_cross, 15)
@@ -563,6 +573,8 @@ def score(r, avenidas, nodes, floors_by_id):
         "bus_score": round(bus_score, 3),
         "health_dist_m": round(d_health) if d_health else None,
         "health_score": round(health_score, 3),
+        "police_dist_m": round(d_police) if d_police else None,
+        "security_score": round(security_score, 3),
         "n_crossings_200m": n_cross,
         "cross_score": round(cross_score, 3),
         "age_label": age_label,

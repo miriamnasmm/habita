@@ -201,7 +201,7 @@ def trim_commerce(osm):
 
 MAP_DATA_SENTINEL = "/*<MAP_DATA>*/null/*</MAP_DATA>*/"
 MAP_GEO_SENTINEL = "/*__MAP_GEO__*/{}/*__/MAP_GEO__*/"
-GEO_DISPLAY_KEYS = ("parks", "schools", "health", "stroads")  # lo demás (commerce/bus/crossings) es solo para rank.py
+GEO_DISPLAY_KEYS = ("parks", "schools", "health", "stroads", "police", "markets", "cycleways")  # commerce/bus/crossings quedan solo para rank.py
 
 
 def build_district_data(slug, no_thumbs):

@@ -56,7 +56,14 @@ def queries(osm_name):
            f'node["highway"="bus_stop"](area.a);node["public_transport"="stop_position"](area.a););out center;')
     crossings = (f'[out:json][timeout:90];{area}('
                  f'node["highway"~"^(crossing|traffic_signals)$"](area.a););out center;')
-    return parks, schools, health, roads, commerce, bus, crossings
+    # Nuevas capas (display + seguridad para el score):
+    police = (f'[out:json][timeout:90];{area}('
+              f'node["amenity"="police"](area.a);way["amenity"="police"](area.a););out tags center;')
+    markets = (f'[out:json][timeout:90];{area}('
+               f'node["amenity"="marketplace"](area.a);way["amenity"="marketplace"](area.a););out tags center;')
+    cycleways = (f'[out:json][timeout:90];{area}('
+                 f'way["highway"="cycleway"](area.a);way["cycleway"~"^(lane|track|opposite_lane)$"](area.a););out tags geom;')
+    return parks, schools, health, roads, commerce, bus, crossings, police, markets, cycleways
 
 
 def overpass(query):
@@ -126,6 +133,20 @@ def coords_from(osm):
     return out
 
 
+def lines_from(osm):
+    """Lista de {name, path:[[lat,lng]]} para líneas (ciclovías), recortada al bbox."""
+    out = []
+    for el in osm.get("elements", []):
+        geom = el.get("geometry")
+        if not geom:
+            continue
+        path = [[round(p["lat"], 6), round(p["lon"], 6)] for p in geom]
+        if len(path) < 2 or not _in_bbox(*_centroid(path)):
+            continue
+        out.append({"name": (el.get("tags") or {}).get("name", ""), "path": path})
+    return out
+
+
 def stroads_from(osm):
     sev = {"trunk": "HIGH", "primary": "HIGH", "secondary": "MODERATE"}
     out = []
@@ -156,7 +177,7 @@ def main():
     d = cfg[args.district]
     s, n, w, e = d["bbox"]
     BBOX = (s - PAD, n + PAD, w - PAD, e + PAD)
-    PARKS_Q, SCHOOLS_Q, HEALTH_Q, ROADS_Q, COMMERCE_Q, BUS_Q, CROSS_Q = queries(d["osm_name"])
+    PARKS_Q, SCHOOLS_Q, HEALTH_Q, ROADS_Q, COMMERCE_Q, BUS_Q, CROSS_Q, POLICE_Q, MARKETS_Q, CYCLE_Q = queries(d["osm_name"])
     out_path = Path(args.out) if args.out else (PROJ / f"map_geo_{args.district}.json")
 
     print(f"Distrito: {d['name']} ({args.district}) — bbox {BBOX}", file=sys.stderr)
@@ -172,16 +193,24 @@ def main():
     bus = coords_from(overpass(BUS_Q)); time.sleep(2)
     print("Overpass (cruces)…", file=sys.stderr)
     crossings = coords_from(overpass(CROSS_Q)); time.sleep(2)
+    print("Overpass (comisarías)…", file=sys.stderr)
+    police = points_from(overpass(POLICE_Q), "Comisaría"); time.sleep(2)
+    print("Overpass (mercados)…", file=sys.stderr)
+    markets = points_from(overpass(MARKETS_Q), "Mercado"); time.sleep(2)
+    print("Overpass (ciclovías)…", file=sys.stderr)
+    cycleways = lines_from(overpass(CYCLE_Q)); time.sleep(2)
     stroads = []
     if not args.no_roads:
         print("Overpass (avenidas)…", file=sys.stderr)
         stroads = stroads_from(overpass(ROADS_Q))
 
     result = {"parks": parks, "schools": schools, "health": health, "stroads": stroads,
-              "commerce": commerce, "bus": bus, "crossings": crossings}
+              "commerce": commerce, "bus": bus, "crossings": crossings,
+              "police": police, "markets": markets, "cycleways": cycleways}
     out_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
     print(f"OK → {out_path.name}: {len(parks)} parques, {len(schools)} colegios, {len(health)} salud, "
-          f"{len(stroads)} avenidas, {len(commerce)} comercio, {len(bus)} bus, {len(crossings)} cruces",
+          f"{len(stroads)} avenidas, {len(commerce)} comercio, {len(bus)} bus, {len(crossings)} cruces, "
+          f"{len(police)} comisarías, {len(markets)} mercados, {len(cycleways)} ciclovías",
           file=sys.stderr)
 
 
