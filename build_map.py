@@ -264,15 +264,30 @@ def combine_and_render():
     geo = {k: [] for k in GEO_DISPLAY_KEYS}
     boundaries = []
     dropped_outliers = 0
+    rent_dir = ROOT / "rent"
+    n_rent = 0
     for s in active:
+        bbox = cfg.get(s, {}).get("bbox")
         md = ROOT / f"map_data_{s}.json"
         if md.exists():
-            bbox = cfg.get(s, {}).get("bbox")
             for r in json.loads(md.read_text()).get("listings", []):
                 if not in_bbox(r, bbox):
                     dropped_outliers += 1
                     continue
+                r["op"] = "venta"
                 all_listings.append(slim_record(r))
+        # alquiler (dir aislado rent/): mismo distrito, op=alquiler
+        rmd = rent_dir / f"map_data_{s}.json"
+        if rmd.exists():
+            for r in json.loads(rmd.read_text()).get("listings", []):
+                if not in_bbox(r, bbox):
+                    dropped_outliers += 1
+                    continue
+                r["op"] = "alquiler"
+                if not r.get("price_usd") and r.get("price_pen"):   # alquiler suele venir en soles
+                    r["price_usd"] = round(r["price_pen"] / 3.7)
+                all_listings.append(slim_record(r))
+                n_rent += 1
         g = ROOT / f"map_geo_{s}.json"
         if g.exists():
             gj = json.loads(g.read_text())

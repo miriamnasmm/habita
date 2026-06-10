@@ -3,7 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Habita · Pueblo Libre, Lima</title>
+<title>Habita — Mapa de habitabilidad de Lima</title>
+<meta name="description" content="Encuentra dónde vivir en Lima. Más de 5.800 propiedades en 17 distritos, con un puntaje de habitabilidad calculado según tus prioridades (calle tranquila, parques, colegios, seguridad, comercios y más).">
+<meta name="theme-color" content="#C2562F">
+<!-- Open Graph / preview al compartir (WhatsApp, redes) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Habita">
+<meta property="og:url" content="https://miriamnasmm.github.io/habita/">
+<meta property="og:title" content="Habita — Mapa de habitabilidad de Lima">
+<meta property="og:description" content="Más de 5.800 propiedades en 17 distritos, con puntaje de habitabilidad según tus prioridades. Encuentra el mejor lugar para vivir en Lima.">
+<meta property="og:image" content="https://miriamnasmm.github.io/habita/habita-preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Habita — Mapa de habitabilidad de Lima">
+<meta name="twitter:description" content="Más de 5.800 propiedades en 17 distritos, con puntaje de habitabilidad según tus prioridades.">
+<meta name="twitter:image" content="https://miriamnasmm.github.io/habita/habita-preview.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -37,6 +52,8 @@ small{font-size:.78em}
 .hb-logo-txt{display:flex;flex-direction:column;line-height:1.05}
 .hb-wordmark{font-family:var(--serif);font-size:1.45rem;font-weight:600;letter-spacing:-.01em;color:var(--espresso)}
 .hb-sub{font-size:.72rem;color:var(--muted);letter-spacing:.02em}
+.hb-fresh{display:flex;align-items:center;gap:5px;margin-top:9px;font-size:.7rem;color:var(--clay);font-weight:600}
+.hb-fresh svg{color:var(--clay)}
 
 /* MAP */
 .habita-map{width:100%;height:100%;background:#EDE6DD;z-index:0}
@@ -254,6 +271,10 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-tab{flex:1;padding:9px 8px;border-radius:9px;font-size:.84rem;font-weight:600;color:var(--muted);transition:.15s}
 .hb-tab:hover{color:var(--espresso)}
 .hb-tab.on{background:#fff;color:var(--espresso);box-shadow:var(--shadow-sm)}
+.hb-optoggle{display:flex;gap:4px;margin:14px 20px 2px;background:var(--cream-2);border-radius:11px;padding:4px}
+.hb-optoggle button{flex:1;padding:9px;border:none;background:none;border-radius:8px;font-size:.86rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
+.hb-optoggle button:hover:not(.on){color:var(--espresso)}
+.hb-optoggle button.on{background:var(--clay);color:#fff;box-shadow:var(--shadow-sm)}
 .hb-tab b{font-family:var(--serif);font-weight:600}
 #results-pane{display:flex;flex-direction:column;gap:5px}
 .hb-rcard{display:flex;gap:11px;padding:9px;border-radius:14px;border:1.5px solid transparent;cursor:pointer;text-align:left;width:100%;background:none;transition:.14s}
@@ -331,6 +352,12 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-coverage-card button{margin-top:10px;background:var(--clay);color:#fff;padding:11px 18px;border-radius:11px;font-weight:600;font-size:.9rem}
 .hb-coverage-card button:hover{background:var(--clay-deep)}
 .is-mobile .hb-search{left:14px;right:14px;width:auto;max-width:none}
+/* móvil angosto: evitar que se corte el contenido del sidebar */
+.is-mobile .hb-cmp-btn-t{display:none}
+.is-mobile .hb-cmp-btn{padding:6px 9px}
+.is-mobile .hb-sortbar{flex-wrap:wrap;row-gap:8px}
+.is-mobile .hb-optoggle{margin-left:14px;margin-right:14px}
+.is-mobile .dirA-side{overflow-x:hidden}
 .is-mobile .leaflet-top.leaflet-left{top:62px}
 /* boot loader (mientras carga map_data.js) */
 #boot-loader{position:fixed;inset:0;z-index:9999;background:var(--cream);display:flex;align-items:center;justify-content:center}
@@ -405,6 +432,26 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-exp-profile{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;color:var(--clay);background:#FCEFE6;padding:5px 11px;border-radius:20px;margin-bottom:14px;line-height:1.2}
 .hb-exp-rows{display:flex;flex-direction:column;gap:9px}
 .hb-exp-row{display:grid;grid-template-columns:118px 1fr 40px;align-items:center;gap:10px}
+/* botón + modal Comparar distritos */
+.hb-cmp-btn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--clay);background:#FCEFE6;border:none;border-radius:9px;padding:6px 11px;cursor:pointer;transition:.14s}
+.hb-cmp-btn:hover{background:#F8E2D2}
+.hb-cmp-btn svg{color:var(--clay)}
+.hb-cmp-card{width:440px}
+.hb-cmp-sort{display:flex;gap:7px;margin:0 0 12px}
+.hb-cmp-sort button{flex:1;font-size:.78rem;font-weight:600;color:var(--muted);background:var(--cream-2);border:1px solid var(--line-2);border-radius:9px;padding:7px;cursor:pointer;transition:.14s}
+.hb-cmp-sort button.on{color:#fff;background:var(--clay);border-color:var(--clay)}
+.hb-cmp-head{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;padding:0 4px 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.hb-cmp-list{display:flex;flex-direction:column;max-height:52vh;overflow-y:auto;margin:0 -4px}
+.hb-cmp-row{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;align-items:center;padding:8px 4px;border:none;background:none;text-align:left;cursor:pointer;border-radius:9px;transition:.12s}
+.hb-cmp-row:hover{background:var(--cream-2)}
+.hb-cmp-rank{font-family:var(--serif);font-size:.92rem;font-weight:600;color:var(--clay);text-align:center}
+.hb-cmp-name{font-size:.86rem;font-weight:600;color:var(--espresso);display:flex;flex-direction:column;line-height:1.15}
+.hb-cmp-name small{font-size:.68rem;font-weight:500;color:var(--muted)}
+.hb-cmp-score{display:flex;align-items:center;gap:7px}
+.hb-cmp-bar{flex:1;height:7px;border-radius:4px;background:var(--cream-3);overflow:hidden}
+.hb-cmp-bar i{display:block;height:100%;border-radius:4px}
+.hb-cmp-score b{font-size:.82rem;color:var(--espresso);min-width:20px}
+.hb-cmp-ppm{font-size:.8rem;font-weight:600;color:var(--espresso-2);text-align:right}
 .hb-exp-row .l{font-size:.83rem;color:var(--espresso-2)}
 .hb-exp-row .bar{height:8px;background:var(--cream-3);border-radius:5px;overflow:hidden}
 .hb-exp-row .bar i{display:block;height:100%;border-radius:5px;background:var(--clay)}
@@ -500,6 +547,7 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 <div id="app" class="dirA">
   <div class="dirA-side">
     <div class="dirA-side-head" id="side-head"></div>
+    <div id="op-toggle"></div>
     <div class="hb-count" id="count">—</div>
     <div id="profile-chips"></div>
     <div id="perso-survey"></div>
@@ -529,6 +577,13 @@ const clamp = (v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
 function fmtUSD(n){return n==null?'—':'$'+Math.round(n).toLocaleString('en-US');}
 function fmtSoles(n){return n==null?'':'S/ '+Math.round(n).toLocaleString('es-PE');}
+const PRICE_SLIDER={venta:{min:50000,max:400000,step:5000,unit:'USD'}, alquiler:{min:0,max:12000,step:100,unit:'USD/mes'}};
+function priceLabel(vm){   // precio con sufijo /mes en alquiler
+  const suf=(vm.op==='alquiler')?'/mes':'';
+  if(vm.priceUSD) return fmtUSD(vm.priceUSD)+suf;
+  if(vm.priceSoles) return fmtSoles(vm.priceSoles)+suf;
+  return 'A consultar';
+}
 function fmtDist(m){return m==null?'—':(m>=1000?(m/1000).toFixed(1)+'km':Math.round(m)+'m');}
 
 /* warm score color (arcilla → ocre → salvia) */
@@ -552,6 +607,7 @@ const ICON={
   chevL:"M15 18l-6-6 6-6",
   heart:"M20.8 5.6a5.4 5.4 0 0 0-7.7 0l-1.1 1.1-1.1-1.1a5.4 5.4 0 1 0-7.7 7.7l1.1 1.1 7.7 7.6 7.7-7.6 1.1-1.1a5.4 5.4 0 0 0 0-7.7z",
   share:"M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13",
+  bars:"M4 20V10M10 20V4M16 20v-7M22 20H2",
   sliders:"M4 6h10M4 12h6M4 18h12M16 4v4M12 10v4M18 16v4",
   layers:"M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
   park:"M12 22v-6M9 16a4 4 0 1 1 6 0M12 10V4M10 6l2-2 2 2",
@@ -595,12 +651,14 @@ const PROFILE_LIST=[
   {key:'personalizado',label:'Personalizado',desc:'Ajusta tú mismo lo que más importa.'}
 ];
 
+const PRICE_RANGE={venta:[0,1200000], alquiler:[0,12000]};        // tope del slider por modo (USD; alquiler = USD/mes)
+const PRICE_DEFAULT={venta:[80000,350000], alquiler:[0,4000]};    // selección inicial por modo
 const state={
-  profile:'familia',
+  profile:'familia', op:'venta',
   weights:{quiet:60,park:60,commerce:50,commute:45,price:40,schools:60,security:55},
   price:[80000,350000], beds:[],
   parkMax:800, floorMax:20, avoidNoisy:true, includeUnknown:true,
-  fino:false, selectedId:null, fav:{}, mobile:false, showFilters:false, showSaved:false, compare:[], sort:'score', parkStyle:'full', district:'pueblo-libre'
+  fino:false, selectedId:null, fav:{}, mobile:false, showFilters:false, showSaved:false, compare:[], sort:'score', parkStyle:'full', district:null
 };
 const SORTS=[
   {key:'score',label:'Mayor habitabilidad'},
@@ -633,7 +691,7 @@ const VMS=(MAP_DATA.listings||[]).map(r=>{
   const s=r._score||{};
   const photos=(r.thumbs&&r.thumbs.length)?r.thumbs.slice(0,8):((r.fallback_images||[]).slice(0,8));
   return {
-    id:r.id, lat:r.lat, lng:r.lng, district:r.district,
+    id:r.id, lat:r.lat, lng:r.lng, district:r.district, op:r.op||'venta',
     address:r.address||r.project_name||'Sin dirección',
     priceUSD:r.price_usd, priceSoles:r.price_pen, pricePerM2:s.ppm_usd,
     areaM2:r.area_total_m2, beds:r.bedrooms,
@@ -693,6 +751,54 @@ function openScoreExplainer(vm){
   const close=()=>host.remove();
   document.getElementById('exp-x').onclick=close;
   host.onclick=e=>{if(e.target===host) close();};
+}
+/* ---------- comparar distritos (ranking por habitabilidad + precio/m²) ---------- */
+function districtStats(){
+  const A=(MAP_DATA&&MAP_DATA.active_districts)||[];
+  return A.map(id=>{
+    const items=VMS.filter(v=>v.district===id && (v.op||'venta')===state.op);  // respeta venta/alquiler
+    if(!items.length) return null;
+    const scores=items.map(scoreOf);
+    const avgScore=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const ppms=items.map(v=>v.pricePerM2).filter(x=>x>0).sort((a,b)=>a-b);
+    const medPpm=ppms.length?ppms[Math.floor(ppms.length/2)]:null;
+    return {id, name:DIST_NAME(id), count:items.length, avgScore, medPpm};
+  }).filter(Boolean);
+}
+function openDistrictCompare(){
+  let sortKey='score';
+  const host=document.createElement('div'); host.className='hb-exp-modal'; host.id='cmp-modal';
+  const close=()=>host.remove();
+  function paint(){
+    const rows=districtStats().sort((a,b)=> sortKey==='ppm'
+      ? ((a.medPpm||1e12)-(b.medPpm||1e12))
+      : (b.avgScore-a.avgScore));
+    const maxS=Math.max.apply(null,rows.map(r=>r.avgScore).concat(1));
+    const body=rows.map((r,i)=>`<button class="hb-cmp-row" data-id="${r.id}">
+        <span class="hb-cmp-rank">${i+1}</span>
+        <span class="hb-cmp-name">${esc(r.name)}<small>${r.count} props</small></span>
+        <span class="hb-cmp-score"><span class="hb-cmp-bar"><i style="width:${Math.round(r.avgScore/maxS*100)}%;background:${scoreColor(r.avgScore)}"></i></span><b>${r.avgScore}</b></span>
+        <span class="hb-cmp-ppm">${r.medPpm?('$'+r.medPpm.toLocaleString('en-US')+'/m²'):'—'}</span>
+      </button>`).join('');
+    host.querySelector('.hb-cmp-list').innerHTML=body;
+    host.querySelector('#cmp-by-score').classList.toggle('on',sortKey==='score');
+    host.querySelector('#cmp-by-ppm').classList.toggle('on',sortKey==='ppm');
+    host.querySelectorAll('.hb-cmp-row').forEach(b=>b.onclick=()=>{ close(); selectDistrict(b.dataset.id); });
+  }
+  host.innerHTML=`<div class="hb-exp-card hb-cmp-card">
+    <div class="hb-exp-h"><h3>Comparar distritos</h3><button class="hb-exp-x" id="cmp-x" aria-label="Cerrar">${icon('close',18)}</button></div>
+    <p class="hb-exp-intro">Habitabilidad promedio según <b>tu perfil</b> (${profileLabel()}) y precio por m² típico. Toca un distrito para ir allá.</p>
+    <div class="hb-cmp-sort"><button id="cmp-by-score">Por habitabilidad</button><button id="cmp-by-ppm">Por precio/m²</button></div>
+    <div class="hb-cmp-head"><span></span><span>Distrito</span><span>Habitabilidad</span><span>Precio/m²</span></div>
+    <div class="hb-cmp-list"></div>
+    <p class="hb-exp-foot">El ranking se recalcula con el perfil que elijas. Precio/m² = mediana de los avisos del distrito.</p>
+  </div>`;
+  document.body.appendChild(host);
+  document.getElementById('cmp-x').onclick=close;
+  host.onclick=e=>{if(e.target===host) close();};
+  host.querySelector('#cmp-by-score').onclick=()=>{sortKey='score'; paint();};
+  host.querySelector('#cmp-by-ppm').onclick=()=>{sortKey='ppm'; paint();};
+  paint();
 }
 function fmtDistEnv(d){return d==null?'—':(d<1000?d+' m':(d/1000).toFixed(1)+' km');}
 function envWord(s){if(s>=75)return'excelente';if(s>=62)return'muy bueno';if(s>=50)return'bueno';if(s>=40)return'regular';return'limitado';}
@@ -762,6 +868,7 @@ function buildMarkers(){
 
 /* ---------- filtros + recompute ---------- */
 function passes(vm){
+  if((vm.op||'venta')!==state.op) return false;                      // venta vs alquiler
   if(state.district && vm.district!==state.district) return false;   // filtro por zona
   if(vm.priceUSD!=null && (vm.priceUSD<state.price[0]||vm.priceUSD>state.price[1])) return false;
   if(state.beds.length){const ok=state.beds.some(b=>b===4?(vm.beds>=4):(vm.beds===b)); if(!ok) return false;}
@@ -792,7 +899,8 @@ function applyFilters(){
   if(toRemove.length) markerLayer.removeLayers(toRemove);
   if(toAdd.length) markerLayer.addLayers(toAdd);
   if(markerLayer.refreshClusters) markerLayer.refreshClusters();
-  document.getElementById('count').innerHTML=`<b>${shown}</b> de ${VMS.length} propiedades`;
+  const opTotal=VMS.reduce((a,v)=>a+((v.op||'venta')===state.op?1:0),0);
+  document.getElementById('count').innerHTML=`<b>${shown}</b> de ${opTotal} ${state.op==='alquiler'?'en alquiler':'en venta'}`;
   refreshActiveLayers();
   renderFilterbar();
   renderResults();
@@ -854,7 +962,7 @@ function detailHtml(vm){
     [icon('age',18,'none','var(--clay)'), esc(vm.age),'antigüedad'],
     [icon('floor',18,'none','var(--clay)'), floorTxt,'piso']
   ].map(s=>`<div class="hb-stat">${s[0]}<b>${s[1]}</b><small>${s[2]}</small></div>`).join('');
-  const priceMain=vm.priceUSD!=null?fmtUSD(vm.priceUSD):'Precio a consultar';
+  const priceMain=priceLabel(vm);
   const priceSoles=vm.priceSoles!=null?`<span>${fmtSoles(vm.priceSoles)}</span>`:'';
   const ppm=vm.pricePerM2!=null?`<small>${fmtUSD(vm.pricePerM2)} por m²</small>`:'';
   const statusBadge=vm.isProject&&(vm.projectStatus||vm.deliveryYear)?`<span class="hb-src-badge" style="margin-left:6px;color:var(--espresso-2);background:var(--cream-2)">${esc(vm.projectStatus||'')}${vm.deliveryYear?' · entrega '+vm.deliveryYear:''}</span>`:'';
@@ -918,8 +1026,19 @@ function openDetail(vm){
 document.addEventListener('keydown',e=>{if(e.key==='Escape') closeDetail();});
 
 /* ---------- sidebar / filtros ---------- */
+function freshLabel(){
+  const g=MAP_DATA&&MAP_DATA.generated_at; if(!g) return '';
+  const diff=(Date.now()-new Date(g).getTime())/1000;
+  if(diff<3600) return 'hoy';
+  if(diff<86400) return 'hace '+Math.floor(diff/3600)+' h';
+  const days=Math.floor(diff/86400);
+  if(days<30) return 'hace '+days+(days===1?' día':' días');
+  return 'el '+new Date(g).toLocaleDateString('es-PE',{day:'numeric',month:'short'});
+}
 function renderHead(){
-  document.getElementById('side-head').innerHTML=`<div class="hb-logo">${logoSvg(34)}<div class="hb-logo-txt"><span class="hb-wordmark">Habita</span><span class="hb-sub">Pueblo Libre · Lima</span></div></div>`;
+  const nDist=((MAP_DATA&&MAP_DATA.active_districts)||[]).length;
+  const fresh=freshLabel();
+  document.getElementById('side-head').innerHTML=`<div class="hb-logo">${logoSvg(34)}<div class="hb-logo-txt"><span class="hb-wordmark">Habita</span><span class="hb-sub">Lima · ${nDist} distritos</span></div></div>${fresh?`<div class="hb-fresh" title="Última actualización de los datos">${icon('age',12)} Datos actualizados ${fresh}</div>`:''}`;
 }
 const CWLABELS=[['quiet','Tranquilidad'],['security','Seguridad'],['park','Parques cerca'],['schools','Colegios cerca'],['commerce','Comercio a pie'],['commute','Transporte'],['price','Buen precio/m²']];
 function renderFilters(){
@@ -927,8 +1046,8 @@ function renderFilters(){
   document.getElementById('filters').innerHTML=`
   <div class="hb-filters">
     <div class="hb-block">
-      <div class="hb-range-head"><span>Precio (USD)</span><b id="price-lbl">${fmtUSD(state.price[0])} – ${fmtUSD(state.price[1])}</b></div>
-      <div class="hb-dual"><input type="range" min="50000" max="400000" step="5000" id="price-lo" value="${state.price[0]}"><input type="range" min="50000" max="400000" step="5000" id="price-hi" value="${state.price[1]}"></div>
+      <div class="hb-range-head"><span>Precio (${PRICE_SLIDER[state.op].unit})</span><b id="price-lbl">${fmtUSD(state.price[0])} – ${fmtUSD(state.price[1])}${state.op==='alquiler'?'/mes':''}</b></div>
+      <div class="hb-dual"><input type="range" min="${PRICE_SLIDER[state.op].min}" max="${PRICE_SLIDER[state.op].max}" step="${PRICE_SLIDER[state.op].step}" id="price-lo" value="${state.price[0]}"><input type="range" min="${PRICE_SLIDER[state.op].min}" max="${PRICE_SLIDER[state.op].max}" step="${PRICE_SLIDER[state.op].step}" id="price-hi" value="${state.price[1]}"></div>
     </div>
     <div class="hb-block">
       <div class="hb-label">Dormitorios</div>
@@ -981,6 +1100,24 @@ function renderSurvey(){
 }
 /* barra de filtros (botón colapsable) */
 function filterCount(){let n=0; if(state.price[0]!==80000||state.price[1]!==350000)n++; if(state.beds.length)n++; if(state.avoidNoisy)n++; if(state.parkMax!==800)n++; if(state.floorMax!==20)n++; return n;}
+function renderOpToggle(){
+  const el=document.getElementById('op-toggle'); if(!el) return;
+  el.innerHTML=`<div class="hb-optoggle">
+    <button class="${state.op==='venta'?'on':''}" data-op="venta">Comprar</button>
+    <button class="${state.op==='alquiler'?'on':''}" data-op="alquiler">Alquilar</button>
+  </div>`;
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>setOp(b.dataset.op));
+}
+function setOp(op){
+  if(op===state.op || (op!=='venta'&&op!=='alquiler')) return;
+  state.op=op;
+  state.price=PRICE_DEFAULT[op].slice();
+  state.district=null;
+  const sc=document.getElementById('search-current'); if(sc) sc.textContent='Todas las zonas';
+  renderOpToggle(); renderFilters(); renderFilterbar(); recompute();
+  const pts=VMS.filter(v=>(v.op||'venta')===op && v.lat && v.lng).map(v=>[v.lat,v.lng]);
+  if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[30,30]});
+}
 function renderFilterbar(){
   const active=filterCount();
   const saved=savedCount();
@@ -999,9 +1136,10 @@ function renderFilterbar(){
 }
 function wireFilters(){
   const plo=document.getElementById('price-lo'), phi=document.getElementById('price-hi'), plbl=document.getElementById('price-lbl');
-  const updPrice=()=>{plbl.textContent=`${fmtUSD(state.price[0])} – ${fmtUSD(state.price[1])}`;};
-  plo.oninput=()=>{let lo=Math.min(+plo.value,state.price[1]-10000); plo.value=lo; state.price=[lo,state.price[1]]; updPrice(); applyFilters();};
-  phi.oninput=()=>{let hi=Math.max(+phi.value,state.price[0]+10000); phi.value=hi; state.price=[state.price[0],hi]; updPrice(); applyFilters();};
+  const gap=state.op==='alquiler'?100:10000;
+  const updPrice=()=>{plbl.textContent=`${fmtUSD(state.price[0])} – ${fmtUSD(state.price[1])}${state.op==='alquiler'?'/mes':''}`;};
+  plo.oninput=()=>{let lo=Math.min(+plo.value,state.price[1]-gap); plo.value=lo; state.price=[lo,state.price[1]]; updPrice(); applyFilters();};
+  phi.oninput=()=>{let hi=Math.max(+phi.value,state.price[0]+gap); phi.value=hi; state.price=[state.price[0],hi]; updPrice(); applyFilters();};
   document.querySelectorAll('.hb-bed').forEach(b=>b.onclick=()=>{const v=+b.dataset.bed; const i=state.beds.indexOf(v); if(i>=0) state.beds.splice(i,1); else state.beds.push(v); b.classList.toggle('on'); applyFilters();});
   document.getElementById('fino-toggle').onclick=()=>{state.fino=!state.fino; const fb=document.getElementById('fino-block'); fb.style.display=state.fino?'':'none'; document.querySelector('#fino-toggle span').textContent=state.fino?'Ocultar ajuste fino':'Ajuste fino';};
   const pm=document.getElementById('parkmax'); pm.oninput=()=>{state.parkMax=+pm.value; document.getElementById('parkmax-lbl').textContent=pm.value+' m'; applyFilters();};
@@ -1320,13 +1458,14 @@ function renderResults(){
   let list=sortList(filteredVMS());
   if(state.showSaved) list=list.filter(vm=>state.fav[vm.id]);
   const host=document.getElementById('results-pane');
-  const sortBar=`<div class="hb-sortbar"><label class="hb-sortsel"><span>Ordenar</span><select id="sortsel">${SORTS.map(o=>`<option value="${o.key}" ${state.sort===o.key?'selected':''}>${o.label}</option>`).join('')}</select>${icon('chev',14)}</label></div>`;
+  const sortBar=`<div class="hb-sortbar"><label class="hb-sortsel"><span>Ordenar</span><select id="sortsel">${SORTS.map(o=>`<option value="${o.key}" ${state.sort===o.key?'selected':''}>${o.label}</option>`).join('')}</select>${icon('chev',14)}</label><button class="hb-cmp-btn" id="cmp-districts" title="Comparar distritos">${icon('bars',13)}<span class="hb-cmp-btn-t">Comparar distritos</span></button></div>`;
   if(!list.length){
     const empty = state.showSaved
       ? emptyState('heart','Aún no guardas nada','Toca el ♥ en una propiedad para tenerla siempre a mano.','empty-all','Ver todas')
       : emptyState('search','No encontramos propiedades','Prueba ampliar el rango de precio o quitar algún filtro.','empty-clear','Limpiar filtros');
     host.innerHTML = sortBar + empty;
     const ss=document.getElementById('sortsel'); if(ss) ss.onchange=e=>{state.sort=e.target.value; renderResults();};
+  const cmpb=document.getElementById('cmp-districts'); if(cmpb) cmpb.onclick=openDistrictCompare;
     const ea=document.getElementById('empty-all'); if(ea) ea.onclick=()=>{state.showSaved=false; renderFilterbar(); renderResults();};
     const ec=document.getElementById('empty-clear'); if(ec) ec.onclick=()=>{clearFilters();};
     return;
@@ -1340,7 +1479,7 @@ function renderResults(){
     return `<div class="hb-rcard ${vm.id===state.selectedId?'on':''}" data-id="${vm.id}" role="button" tabindex="0">
       <span class="hb-rcard-media">${ph}<span class="hb-rcard-score" style="background:${color}">${vm.score}</span>${constr}</span>
       <span class="hb-rcard-body">
-        <span class="hb-rcard-price">${vm.priceUSD!=null?fmtUSD(vm.priceUSD):'A consultar'}</span>
+        <span class="hb-rcard-price">${priceLabel(vm)}</span>
         <span class="hb-rcard-addr">${esc(vm.address)}</span>
         <span class="hb-rcard-meta">${meta}</span>
         <span class="hb-rcard-word" style="color:${color}">${scoreWord(vm.score)} para vivir</span>
@@ -1353,6 +1492,7 @@ function renderResults(){
   }).join('');
   host.querySelectorAll('.hb-rcard').forEach(b=>b.onclick=()=>selectProperty(b.dataset.id));
   const ss=document.getElementById('sortsel'); if(ss) ss.onchange=e=>{state.sort=e.target.value; renderResults();};
+  const cmpb=document.getElementById('cmp-districts'); if(cmpb) cmpb.onclick=openDistrictCompare;
   host.querySelectorAll('.hb-rc-fav').forEach(b=>b.onclick=e=>{e.stopPropagation(); toggleFav(b.dataset.fav);});
   host.querySelectorAll('.hb-rc-cmp').forEach(b=>b.onclick=e=>{e.stopPropagation(); toggleCompare(b.dataset.cmp);});
 }
@@ -1583,6 +1723,7 @@ computeSchoolScores();
 renderFilters();
 renderChips();
 renderSurvey();
+renderOpToggle();
 renderFilterbar();
 buildLegend();
 buildLayers();
