@@ -420,6 +420,26 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-exp-profile{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;color:var(--clay);background:#FCEFE6;padding:5px 11px;border-radius:20px;margin-bottom:14px;line-height:1.2}
 .hb-exp-rows{display:flex;flex-direction:column;gap:9px}
 .hb-exp-row{display:grid;grid-template-columns:118px 1fr 40px;align-items:center;gap:10px}
+/* botón + modal Comparar distritos */
+.hb-cmp-btn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--clay);background:#FCEFE6;border:none;border-radius:9px;padding:6px 11px;cursor:pointer;transition:.14s}
+.hb-cmp-btn:hover{background:#F8E2D2}
+.hb-cmp-btn svg{color:var(--clay)}
+.hb-cmp-card{width:440px}
+.hb-cmp-sort{display:flex;gap:7px;margin:0 0 12px}
+.hb-cmp-sort button{flex:1;font-size:.78rem;font-weight:600;color:var(--muted);background:var(--cream-2);border:1px solid var(--line-2);border-radius:9px;padding:7px;cursor:pointer;transition:.14s}
+.hb-cmp-sort button.on{color:#fff;background:var(--clay);border-color:var(--clay)}
+.hb-cmp-head{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;padding:0 4px 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.hb-cmp-list{display:flex;flex-direction:column;max-height:52vh;overflow-y:auto;margin:0 -4px}
+.hb-cmp-row{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;align-items:center;padding:8px 4px;border:none;background:none;text-align:left;cursor:pointer;border-radius:9px;transition:.12s}
+.hb-cmp-row:hover{background:var(--cream-2)}
+.hb-cmp-rank{font-family:var(--serif);font-size:.92rem;font-weight:600;color:var(--clay);text-align:center}
+.hb-cmp-name{font-size:.86rem;font-weight:600;color:var(--espresso);display:flex;flex-direction:column;line-height:1.15}
+.hb-cmp-name small{font-size:.68rem;font-weight:500;color:var(--muted)}
+.hb-cmp-score{display:flex;align-items:center;gap:7px}
+.hb-cmp-bar{flex:1;height:7px;border-radius:4px;background:var(--cream-3);overflow:hidden}
+.hb-cmp-bar i{display:block;height:100%;border-radius:4px}
+.hb-cmp-score b{font-size:.82rem;color:var(--espresso);min-width:20px}
+.hb-cmp-ppm{font-size:.8rem;font-weight:600;color:var(--espresso-2);text-align:right}
 .hb-exp-row .l{font-size:.83rem;color:var(--espresso-2)}
 .hb-exp-row .bar{height:8px;background:var(--cream-3);border-radius:5px;overflow:hidden}
 .hb-exp-row .bar i{display:block;height:100%;border-radius:5px;background:var(--clay)}
@@ -567,6 +587,7 @@ const ICON={
   chevL:"M15 18l-6-6 6-6",
   heart:"M20.8 5.6a5.4 5.4 0 0 0-7.7 0l-1.1 1.1-1.1-1.1a5.4 5.4 0 1 0-7.7 7.7l1.1 1.1 7.7 7.6 7.7-7.6 1.1-1.1a5.4 5.4 0 0 0 0-7.7z",
   share:"M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13",
+  bars:"M4 20V10M10 20V4M16 20v-7M22 20H2",
   sliders:"M4 6h10M4 12h6M4 18h12M16 4v4M12 10v4M18 16v4",
   layers:"M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
   park:"M12 22v-6M9 16a4 4 0 1 1 6 0M12 10V4M10 6l2-2 2 2",
@@ -708,6 +729,54 @@ function openScoreExplainer(vm){
   const close=()=>host.remove();
   document.getElementById('exp-x').onclick=close;
   host.onclick=e=>{if(e.target===host) close();};
+}
+/* ---------- comparar distritos (ranking por habitabilidad + precio/m²) ---------- */
+function districtStats(){
+  const A=(MAP_DATA&&MAP_DATA.active_districts)||[];
+  return A.map(id=>{
+    const items=VMS.filter(v=>v.district===id);
+    if(!items.length) return null;
+    const scores=items.map(scoreOf);
+    const avgScore=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const ppms=items.map(v=>v.pricePerM2).filter(x=>x>0).sort((a,b)=>a-b);
+    const medPpm=ppms.length?ppms[Math.floor(ppms.length/2)]:null;
+    return {id, name:DIST_NAME(id), count:items.length, avgScore, medPpm};
+  }).filter(Boolean);
+}
+function openDistrictCompare(){
+  let sortKey='score';
+  const host=document.createElement('div'); host.className='hb-exp-modal'; host.id='cmp-modal';
+  const close=()=>host.remove();
+  function paint(){
+    const rows=districtStats().sort((a,b)=> sortKey==='ppm'
+      ? ((a.medPpm||1e12)-(b.medPpm||1e12))
+      : (b.avgScore-a.avgScore));
+    const maxS=Math.max.apply(null,rows.map(r=>r.avgScore).concat(1));
+    const body=rows.map((r,i)=>`<button class="hb-cmp-row" data-id="${r.id}">
+        <span class="hb-cmp-rank">${i+1}</span>
+        <span class="hb-cmp-name">${esc(r.name)}<small>${r.count} props</small></span>
+        <span class="hb-cmp-score"><span class="hb-cmp-bar"><i style="width:${Math.round(r.avgScore/maxS*100)}%;background:${scoreColor(r.avgScore)}"></i></span><b>${r.avgScore}</b></span>
+        <span class="hb-cmp-ppm">${r.medPpm?('$'+r.medPpm.toLocaleString('en-US')+'/m²'):'—'}</span>
+      </button>`).join('');
+    host.querySelector('.hb-cmp-list').innerHTML=body;
+    host.querySelector('#cmp-by-score').classList.toggle('on',sortKey==='score');
+    host.querySelector('#cmp-by-ppm').classList.toggle('on',sortKey==='ppm');
+    host.querySelectorAll('.hb-cmp-row').forEach(b=>b.onclick=()=>{ close(); selectDistrict(b.dataset.id); });
+  }
+  host.innerHTML=`<div class="hb-exp-card hb-cmp-card">
+    <div class="hb-exp-h"><h3>Comparar distritos</h3><button class="hb-exp-x" id="cmp-x" aria-label="Cerrar">${icon('close',18)}</button></div>
+    <p class="hb-exp-intro">Habitabilidad promedio según <b>tu perfil</b> (${profileLabel()}) y precio por m² típico. Toca un distrito para ir allá.</p>
+    <div class="hb-cmp-sort"><button id="cmp-by-score">Por habitabilidad</button><button id="cmp-by-ppm">Por precio/m²</button></div>
+    <div class="hb-cmp-head"><span></span><span>Distrito</span><span>Habitabilidad</span><span>Precio/m²</span></div>
+    <div class="hb-cmp-list"></div>
+    <p class="hb-exp-foot">El ranking se recalcula con el perfil que elijas. Precio/m² = mediana de los avisos del distrito.</p>
+  </div>`;
+  document.body.appendChild(host);
+  document.getElementById('cmp-x').onclick=close;
+  host.onclick=e=>{if(e.target===host) close();};
+  host.querySelector('#cmp-by-score').onclick=()=>{sortKey='score'; paint();};
+  host.querySelector('#cmp-by-ppm').onclick=()=>{sortKey='ppm'; paint();};
+  paint();
 }
 function fmtDistEnv(d){return d==null?'—':(d<1000?d+' m':(d/1000).toFixed(1)+' km');}
 function envWord(s){if(s>=75)return'excelente';if(s>=62)return'muy bueno';if(s>=50)return'bueno';if(s>=40)return'regular';return'limitado';}
@@ -1335,13 +1404,14 @@ function renderResults(){
   let list=sortList(filteredVMS());
   if(state.showSaved) list=list.filter(vm=>state.fav[vm.id]);
   const host=document.getElementById('results-pane');
-  const sortBar=`<div class="hb-sortbar"><label class="hb-sortsel"><span>Ordenar</span><select id="sortsel">${SORTS.map(o=>`<option value="${o.key}" ${state.sort===o.key?'selected':''}>${o.label}</option>`).join('')}</select>${icon('chev',14)}</label></div>`;
+  const sortBar=`<div class="hb-sortbar"><label class="hb-sortsel"><span>Ordenar</span><select id="sortsel">${SORTS.map(o=>`<option value="${o.key}" ${state.sort===o.key?'selected':''}>${o.label}</option>`).join('')}</select>${icon('chev',14)}</label><button class="hb-cmp-btn" id="cmp-districts" title="Comparar distritos">${icon('bars',13)} Comparar distritos</button></div>`;
   if(!list.length){
     const empty = state.showSaved
       ? emptyState('heart','Aún no guardas nada','Toca el ♥ en una propiedad para tenerla siempre a mano.','empty-all','Ver todas')
       : emptyState('search','No encontramos propiedades','Prueba ampliar el rango de precio o quitar algún filtro.','empty-clear','Limpiar filtros');
     host.innerHTML = sortBar + empty;
     const ss=document.getElementById('sortsel'); if(ss) ss.onchange=e=>{state.sort=e.target.value; renderResults();};
+  const cmpb=document.getElementById('cmp-districts'); if(cmpb) cmpb.onclick=openDistrictCompare;
     const ea=document.getElementById('empty-all'); if(ea) ea.onclick=()=>{state.showSaved=false; renderFilterbar(); renderResults();};
     const ec=document.getElementById('empty-clear'); if(ec) ec.onclick=()=>{clearFilters();};
     return;
@@ -1368,6 +1438,7 @@ function renderResults(){
   }).join('');
   host.querySelectorAll('.hb-rcard').forEach(b=>b.onclick=()=>selectProperty(b.dataset.id));
   const ss=document.getElementById('sortsel'); if(ss) ss.onchange=e=>{state.sort=e.target.value; renderResults();};
+  const cmpb=document.getElementById('cmp-districts'); if(cmpb) cmpb.onclick=openDistrictCompare;
   host.querySelectorAll('.hb-rc-fav').forEach(b=>b.onclick=e=>{e.stopPropagation(); toggleFav(b.dataset.fav);});
   host.querySelectorAll('.hb-rc-cmp').forEach(b=>b.onclick=e=>{e.stopPropagation(); toggleCompare(b.dataset.cmp);});
 }
