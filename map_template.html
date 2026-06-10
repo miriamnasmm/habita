@@ -1573,6 +1573,14 @@ parksLayer.addTo(map);
 renderParks(state.parkStyle);
 updatePoiVisibility();
 checkMobile();
+// vista inicial: encuadra los distritos activos por su bbox (robusto a pines outlier)
+(function(){ try{
+  const A=(MAP_DATA&&MAP_DATA.active_districts)||[], C=(MAP_DATA&&MAP_DATA.districts)||{};
+  const pts=[];
+  A.forEach(id=>{ const d=C[id]; if(d&&d.bbox){ const b=d.bbox; pts.push([b[0],b[2]],[b[1],b[3]]); }
+                  else if(d&&d.center){ pts.push(d.center); } });
+  if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[25,25]});
+}catch(_){} })();
 const _bl=document.getElementById('boot-loader'); if(_bl) _bl.remove();
 </script>
 </body>
