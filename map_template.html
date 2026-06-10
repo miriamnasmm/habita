@@ -1592,13 +1592,15 @@ parksLayer.addTo(map);
 renderParks(state.parkStyle);
 updatePoiVisibility();
 checkMobile();
-// vista inicial: encuadra los distritos activos por su bbox (robusto a pines outlier)
+// vista inicial: encuadra donde están las propiedades (outliers ya filtrados en build).
+// Usa percentil 1-99 de lat/lng para ignorar puntos extremos sueltos (ej: 1 aviso lejano).
 function fitAllDistricts(){ try{
-  const A=(MAP_DATA&&MAP_DATA.active_districts)||[], C=(MAP_DATA&&MAP_DATA.districts)||{};
-  const pts=[];
-  A.forEach(id=>{ const d=C[id]; if(d&&d.bbox){ const b=d.bbox; pts.push([b[0],b[2]],[b[1],b[3]]); }
-                  else if(d&&d.center){ pts.push(d.center); } });
-  if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[25,25]});
+  const lats=[], lngs=[];
+  VMS.forEach(v=>{ if(v.lat&&v.lng){ lats.push(v.lat); lngs.push(v.lng); } });
+  if(lats.length<2) return;
+  lats.sort((a,b)=>a-b); lngs.sort((a,b)=>a-b);
+  const q=(arr,p)=>arr[Math.min(arr.length-1,Math.max(0,Math.floor(p*(arr.length-1))))];
+  map.fitBounds(L.latLngBounds([[q(lats,.01),q(lngs,.01)],[q(lats,.99),q(lngs,.99)]]),{padding:[30,30]});
 }catch(_){} }
 fitAllDistricts();
 // deep-link: abrir una propiedad (#p=<id>) o un distrito (#z=<id>) desde la URL
