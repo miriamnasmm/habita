@@ -173,7 +173,7 @@ def trim_listing(r, floors_idx):
     out["cover_thumb"] = out["thumbs"][0] if out["thumbs"] else (
         out["fallback_images"][0] if out["fallback_images"] else None
     )
-    return out
+    return slim_record(out)
 
 
 def trim_avenidas(osm):
@@ -204,6 +204,37 @@ MAP_GEO_SENTINEL = "/*__MAP_GEO__*/{}/*__/MAP_GEO__*/"
 GEO_DISPLAY_KEYS = ("parks", "schools", "health", "stroads", "police", "markets", "cycleways",
                     "malls", "banks", "universities", "pharmacies", "kindergarten")  # commerce/bus/crossings solo para rank.py
 
+# --- adelgazar map_data (solo lo que el front realmente usa) ---
+SCORE_KEEP = {"composite", "ppm_usd", "building_floors_est", "llm_unit_floor", "age_label",
+              "stroad_score", "commerce_score", "conn_score", "park_score", "health_score",
+              "modernity", "cross_score", "bus_score", "value", "security_score",
+              "police_dist_m", "park_dist_m", "park_name", "stroad_nearest_dist_m",
+              "stroad_nearest_name", "metro_name", "metro_dist_m"}
+FALLBACK_CAP = 6     # nº de fotos por aviso (el carrusel muestra hasta esto)
+DESC_CAP = 200       # recorte de description_jsonld
+BBOX_PAD = 0.02      # ~2.2 km: avisos más lejos del bbox de su distrito = mal geocodificados
+
+
+def slim_record(r):
+    """Quita campos que el front no consume, recorta fotos/descripcion."""
+    sc = r.get("_score")
+    if isinstance(sc, dict):
+        r["_score"] = {k: v for k, v in sc.items() if k in SCORE_KEEP}
+    if r.get("fallback_images"):
+        r["fallback_images"] = r["fallback_images"][:FALLBACK_CAP]
+    if r.get("description_jsonld"):
+        r["description_jsonld"] = r["description_jsonld"][:DESC_CAP]
+    r.pop("cover_thumb", None)
+    return r
+
+
+def in_bbox(r, bbox):
+    """True si la coord del aviso cae dentro del bbox (con padding)."""
+    if not bbox or r.get("lat") is None or r.get("lng") is None:
+        return True
+    s, n, w, e = bbox
+    return (s - BBOX_PAD <= r["lat"] <= n + BBOX_PAD) and (w - BBOX_PAD <= r["lng"] <= e + BBOX_PAD)
+
 
 def build_district_data(slug, no_thumbs):
     """Construye map_data_<slug>.json desde ranking_<slug>.jsonl (listings + thumbs)."""
@@ -232,10 +263,16 @@ def combine_and_render():
     all_listings = []
     geo = {k: [] for k in GEO_DISPLAY_KEYS}
     boundaries = []
+    dropped_outliers = 0
     for s in active:
         md = ROOT / f"map_data_{s}.json"
         if md.exists():
-            all_listings += json.loads(md.read_text()).get("listings", [])
+            bbox = cfg.get(s, {}).get("bbox")
+            for r in json.loads(md.read_text()).get("listings", []):
+                if not in_bbox(r, bbox):
+                    dropped_outliers += 1
+                    continue
+                all_listings.append(slim_record(r))
         g = ROOT / f"map_geo_{s}.json"
         if g.exists():
             gj = json.loads(g.read_text())
@@ -267,7 +304,7 @@ def combine_and_render():
     html_kb = OUT_HTML.stat().st_size / 1024
     data_kb = (ROOT / "map_data.js").stat().st_size / 1024
     print(f"Wrote map.html ({html_kb:.1f} KB) + map_data.js ({data_kb:.1f} KB) + map_geo.js — "
-          f"{len(all_listings)} listings, distritos: {active}")
+          f"{len(all_listings)} listings (−{dropped_outliers} outliers fuera de bbox), distritos: {active}")
 
 
 def main():
