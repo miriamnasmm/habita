@@ -219,5 +219,73 @@
     ],
     "zoom": 13,
     "data": true
+  },
+  "chorrillos": {
+    "name": "Chorrillos",
+    "osm_name": "Chorrillos",
+    "urbania_slug": "chorrillos--lima--lima",
+    "bbox": [
+      -12.2308,
+      -12.1539,
+      -77.0398,
+      -76.9723
+    ],
+    "center": [
+      -12.1923,
+      -77.009
+    ],
+    "zoom": 14,
+    "data": true
+  },
+  "san-juan-de-miraflores": {
+    "name": "San Juan de Miraflores",
+    "osm_name": "San Juan de Miraflores",
+    "urbania_slug": "san-juan-de-miraflores--lima--lima",
+    "bbox": [
+      -12.1949,
+      -12.1159,
+      -76.9862,
+      -76.9408
+    ],
+    "center": [
+      -12.1554,
+      -76.9724
+    ],
+    "zoom": 14,
+    "data": true
+  },
+  "ate": {
+    "name": "Ate",
+    "osm_name": "Ate",
+    "urbania_slug": "ate--lima--lima",
+    "bbox": [
+      -12.0849,
+      -11.9926,
+      -76.9981,
+      -76.7829
+    ],
+    "center": [
+      -12.0387,
+      -76.8969
+    ],
+    "zoom": 12,
+    "data": true
+  },
+  "villa-maria-del-triunfo": {
+    "name": "Villa María del Triunfo",
+    "osm_name": "Villa María del Triunfo",
+    "urbania_slug": "villa-maria-del-triunfo--lima--lima",
+    "bbox": [
+      -12.2345,
+      -12.1189,
+      -76.9617,
+      -76.8811
+    ],
+    "center": [
+      -12.1766,
+      -76.919
+    ],
+    "zoom": 13,
+    "data": true
   }
 }

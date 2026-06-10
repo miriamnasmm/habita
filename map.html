@@ -143,6 +143,9 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-nav.prev{left:13px}.hb-nav.next{right:13px}
 .hb-detail-count{position:absolute;bottom:13px;right:13px;background:rgba(58,34,24,.78);color:#fff;font-size:.74rem;padding:3px 10px;border-radius:20px}
 .hb-detail .hb-fav.big{top:13px;right:60px;background:rgba(255,255,255,.92)}
+.hb-detail .hb-detail-share{top:13px;right:107px;color:var(--espresso)}
+.hb-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(16px);background:var(--espresso);color:#fff;padding:10px 18px;border-radius:11px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:99999}
+.hb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hb-detail-scroll{flex:1;min-height:0;overflow-y:auto;padding:20px 22px 30px;display:flex;flex-direction:column;gap:18px}
 .hb-detail-head h2{font-family:var(--serif);font-size:1.5rem;line-height:1.15;color:var(--espresso)}
 .hb-detail-loc{font-size:.86rem;color:var(--muted);margin-top:3px}
@@ -548,6 +551,7 @@ const ICON={
   chev:"M9 6l6 6-6 6",
   chevL:"M15 18l-6-6 6-6",
   heart:"M20.8 5.6a5.4 5.4 0 0 0-7.7 0l-1.1 1.1-1.1-1.1a5.4 5.4 0 1 0-7.7 7.7l1.1 1.1 7.7 7.6 7.7-7.6 1.1-1.1a5.4 5.4 0 0 0 0-7.7z",
+  share:"M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13",
   sliders:"M4 6h10M4 12h6M4 18h12M16 4v4M12 10v4M18 16v4",
   layers:"M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
   park:"M12 22v-6M9 16a4 4 0 1 1 6 0M12 10V4M10 6l2-2 2 2",
@@ -758,6 +762,7 @@ function buildMarkers(){
 
 /* ---------- filtros + recompute ---------- */
 function passes(vm){
+  if(state.district && vm.district!==state.district) return false;   // filtro por zona
   if(vm.priceUSD!=null && (vm.priceUSD<state.price[0]||vm.priceUSD>state.price[1])) return false;
   if(state.beds.length){const ok=state.beds.some(b=>b===4?(vm.beds>=4):(vm.beds===b)); if(!ok) return false;}
   const parkUnknown=vm.parkDist==null||vm.parkDist>1200;
@@ -820,6 +825,21 @@ function closeDetail(){
   document.getElementById('detail-host').innerHTML='';
   document.querySelectorAll('.hb-rcard.on').forEach(c=>c.classList.remove('on'));
   const m=prev!=null&&markers[prev]; if(m&&markerLayer.hasLayer(m)) m.setIcon(pinIcon(byId(prev),false));
+  if(location.hash.indexOf('p=')>=0){ history.replaceState(null,'',location.pathname+location.search); }  // limpia el deep-link
+}
+let _toastT=null;
+function toast(msg){
+  let t=document.getElementById('hb-toast');
+  if(!t){ t=document.createElement('div'); t.id='hb-toast'; t.className='hb-toast'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function shareListing(vm){
+  const link=location.origin+location.pathname+'#p='+encodeURIComponent(vm.id);
+  const txt=`${vm.address} — ${fmtUSD(vm.priceUSD)} · Habitabilidad ${vm.score}/100 · Habita`;
+  if(navigator.share){ navigator.share({title:'Habita',text:txt,url:link}).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>toast('Link copiado ✓'),()=>toast(link)); }
+  else { toast(link); }
 }
 function detailHtml(vm){
   const color=scoreColor(vm.score), photos=vm.photos;
@@ -847,11 +867,12 @@ function detailHtml(vm){
       <button class="hb-detail-close" id="d-close">${icon('close',20)}</button>
       ${navs}
       <button class="hb-fav big ${fav?'on':''}" id="d-fav">${icon('heart',18,fav?'currentColor':'none')}</button>
+      <button class="hb-fav big hb-detail-share" id="d-share" title="Compartir" aria-label="Compartir">${icon('share',17)}</button>
     </div>
     <div class="hb-detail-scroll">
       <div class="hb-detail-head">
         <h2>${esc(vm.address)}</h2>
-        <div class="hb-detail-loc">Pueblo Libre · Lima</div>
+        <div class="hb-detail-loc">${esc(DIST_NAME(vm.district))} · Lima</div>
         <span class="hb-src-badge">${esc(vm.source)}</span>${statusBadge}
       </div>
       <div class="hb-detail-price"><strong>${priceMain}</strong>${priceSoles}${ppm}</div>
@@ -885,6 +906,8 @@ function openDetail(vm){
   const ex=document.getElementById('d-explain'); if(ex) ex.onclick=()=>openScoreExplainer(vm);
   const fb=document.getElementById('d-fav');
   if(fb) fb.onclick=()=>toggleFav(vm.id);
+  const sh=document.getElementById('d-share'); if(sh) sh.onclick=()=>shareListing(vm);
+  history.replaceState(null,'','#p='+encodeURIComponent(vm.id));   // URL compartible refleja la propiedad abierta
   if(vm.photos.length>1){
     let idx=0; const img=document.getElementById('d-photo'), cnt=document.getElementById('d-count');
     const upd=()=>{img.src=vm.photos[idx]; cnt.textContent=`${idx+1} / ${vm.photos.length}`;};
@@ -1402,29 +1425,23 @@ function openCompare(){
 }
 
 /* ---------- buscador de zona / multi-distrito ---------- */
-const DISTRICTS=[
-  {id:'pueblo-libre',name:'Pueblo Libre',center:[-12.0748,-77.0628],zoom:15,data:true},
-  {id:'magdalena',name:'Magdalena del Mar',center:[-12.0905,-77.0719],zoom:15,data:false},
-  {id:'san-miguel',name:'San Miguel',center:[-12.0775,-77.0922],zoom:14,data:false},
-  {id:'jesus-maria',name:'Jesús María',center:[-12.0744,-77.0494],zoom:15,data:false},
-  {id:'brena',name:'Breña',center:[-12.0586,-77.0503],zoom:15,data:false},
-  {id:'lince',name:'Lince',center:[-12.0889,-77.0367],zoom:15,data:false},
-  {id:'san-isidro',name:'San Isidro',center:[-12.0977,-77.0365],zoom:14,data:false},
-  {id:'miraflores',name:'Miraflores',center:[-12.1211,-77.0290],zoom:14,data:false},
-  {id:'cercado',name:'Cercado de Lima',center:[-12.0464,-77.0428],zoom:14,data:false}
-];
-// Activa los distritos con data real (inyectados por build_map) y toma su centro de districts.json.
-(function(){
+// Lista de distritos construida desde la data real (todos los activos aparecen en el buscador "Zona").
+const DIST_COUNT={}; VMS.forEach(v=>{ if(v.district) DIST_COUNT[v.district]=(DIST_COUNT[v.district]||0)+1; });
+const DIST_NAME=id=>((MAP_DATA&&MAP_DATA.districts&&MAP_DATA.districts[id]&&MAP_DATA.districts[id].name)||id);
+const DISTRICTS=(function(){
   const A=(MAP_DATA&&MAP_DATA.active_districts)||['pueblo-libre'];
   const C=(MAP_DATA&&MAP_DATA.districts)||{};
-  DISTRICTS.forEach(d=>{ d.data=A.indexOf(d.id)>=0; if(C[d.id]&&C[d.id].center){ d.center=C[d.id].center; d.zoom=C[d.id].zoom||d.zoom; } });
+  return A.filter(id=>C[id]).map(id=>({
+    id, name:C[id].name||id, center:C[id].center||[-12.0748,-77.0628], zoom:C[id].zoom||15,
+    data:true, count:DIST_COUNT[id]||0
+  })).sort((a,b)=>b.count-a.count);   // más propiedades primero
 })();
 function buildSearch(){
   const host=document.getElementById('search');
   host.innerHTML=`
     <button class="hb-search-bar" id="search-toggle">
       ${icon('search',18)}
-      <span class="hb-search-label"><small>Zona</small><strong id="search-current">Pueblo Libre</strong></span>
+      <span class="hb-search-label"><small>Zona</small><strong id="search-current">Todas las zonas</strong></span>
       <span class="hb-chevd">${icon('chev',16)}</span>
     </button>
     <div class="hb-search-panel" id="search-panel" hidden>
@@ -1458,8 +1475,11 @@ function renderSearchResults(q){
   const parks=nq.length?(MAP_GEO.parks||[]).filter(p=>norm(p.name).includes(nq)).slice(0,5):[];
   const avs=nq.length?(MAP_GEO.stroads||[]).filter(a=>norm(a.name).includes(nq)).slice(0,5):[];
   let html='';
-  if(dist.length){
-    html+='<div class="hb-srch-group">Zonas</div>'+dist.map(d=>`<button class="hb-dist ${d.id===state.district?'on':''} ${d.data?'':'soon'}" data-kind="dist" data-key="${d.id}"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">${esc(d.name)}</span><span class="hb-dist-badge ${d.data?'data':'soon'}">${d.data?'Disponible':'Próximamente'}</span></button>`).join('');
+  const showAll=!nq.length;
+  if(dist.length||showAll){
+    html+='<div class="hb-srch-group">Zonas</div>';
+    if(showAll) html+=`<button class="hb-dist ${!state.district?'on':''}" data-kind="dist" data-key="__all__"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">Todas las zonas</span><span class="hb-dist-badge data">${VMS.length}</span></button>`;
+    html+=dist.map(d=>`<button class="hb-dist ${d.id===state.district?'on':''}" data-kind="dist" data-key="${d.id}"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">${esc(d.name)}</span><span class="hb-dist-badge data">${d.count}</span></button>`).join('');
   }
   if(streets.length){
     html+='<div class="hb-srch-group">Calles y direcciones</div>'+streets.map(s=>`<button class="hb-dist" data-kind="street" data-key="${esc(s.name)}"><span class="hb-dist-ic">${icon('pin',14,'none','var(--clay)')}</span><span class="hb-dist-name">${esc(s.name)}</span><span class="hb-dist-badge data">${s.items.length} aviso${s.items.length>1?'s':''}</span></button>`).join('');
@@ -1508,19 +1528,18 @@ async function runGeocode(q){
   }
 }
 function selectDistrict(id){
+  closeSearch();
+  const cov=document.getElementById('coverage'); if(cov) cov.hidden=true;
+  if(id==='__all__'){                                  // todas las zonas
+    state.district=null;
+    document.getElementById('search-current').textContent='Todas las zonas';
+    fitAllDistricts(); recompute(); return;
+  }
   const d=DISTRICTS.find(x=>x.id===id); if(!d) return;
   state.district=id;
   document.getElementById('search-current').textContent=d.name;
-  document.getElementById('search').classList.remove('open');
-  document.getElementById('search-panel').hidden=true;
   map.setView(d.center,d.zoom,{animate:true});
-  const cov=document.getElementById('coverage');
-  if(d.data){ cov.hidden=true; }
-  else {
-    cov.hidden=false;
-    cov.innerHTML=`<div class="hb-coverage-card"><span class="ic">${icon('pin',24)}</span><strong>Próximamente en ${esc(d.name)}</strong><p>Aún no tenemos propiedades aquí. Estamos sumando distritos de Lima — <b>Pueblo Libre</b> ya está disponible.</p><button id="cov-back">Volver a Pueblo Libre</button></div>`;
-    document.getElementById('cov-back').onclick=()=>selectDistrict('pueblo-libre');
-  }
+  recompute();                                         // filtra la lista a ese distrito
 }
 
 /* ---------- legend (dinámica: solo muestra lo visible) ---------- */
@@ -1574,12 +1593,19 @@ renderParks(state.parkStyle);
 updatePoiVisibility();
 checkMobile();
 // vista inicial: encuadra los distritos activos por su bbox (robusto a pines outlier)
-(function(){ try{
+function fitAllDistricts(){ try{
   const A=(MAP_DATA&&MAP_DATA.active_districts)||[], C=(MAP_DATA&&MAP_DATA.districts)||{};
   const pts=[];
   A.forEach(id=>{ const d=C[id]; if(d&&d.bbox){ const b=d.bbox; pts.push([b[0],b[2]],[b[1],b[3]]); }
                   else if(d&&d.center){ pts.push(d.center); } });
   if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[25,25]});
+}catch(_){} }
+fitAllDistricts();
+// deep-link: abrir una propiedad (#p=<id>) o un distrito (#z=<id>) desde la URL
+(function(){ try{
+  const p=new URLSearchParams(location.hash.slice(1));
+  if(p.get('p')){ const vm=byId(p.get('p')); if(vm) selectProperty(vm.id); }   // selectProperty hace zoom + abre ficha
+  else if(p.get('z')){ selectDistrict(p.get('z')); }
 }catch(_){} })();
 const _bl=document.getElementById('boot-loader'); if(_bl) _bl.remove();
 </script>
