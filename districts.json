@@ -49,5 +49,175 @@
     ],
     "zoom": 15,
     "data": true
+  },
+  "magdalena": {
+    "name": "Magdalena del Mar",
+    "osm_name": "Magdalena del Mar",
+    "urbania_slug": "magdalena-del-mar--lima--lima",
+    "bbox": [
+      -12.1079,
+      -12.0836,
+      -77.079,
+      -77.055
+    ],
+    "center": [
+      -12.0957,
+      -77.0682
+    ],
+    "zoom": 15,
+    "data": false
+  },
+  "lince": {
+    "name": "Lince",
+    "osm_name": "Lince",
+    "urbania_slug": "lince--lima--lima",
+    "bbox": [
+      -12.0919,
+      -12.0787,
+      -77.0486,
+      -77.0228
+    ],
+    "center": [
+      -12.0866,
+      -77.0366
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "brena": {
+    "name": "Breña",
+    "osm_name": "Breña",
+    "urbania_slug": "brena--lima--lima",
+    "bbox": [
+      -12.0703,
+      -12.0491,
+      -77.0612,
+      -77.0416
+    ],
+    "center": [
+      -12.0597,
+      -77.0501
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "surquillo": {
+    "name": "Surquillo",
+    "osm_name": "Surquillo",
+    "urbania_slug": "surquillo--lima--lima",
+    "bbox": [
+      -12.1264,
+      -12.102,
+      -77.0275,
+      -76.9938
+    ],
+    "center": [
+      -12.1142,
+      -77.0105
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "barranco": {
+    "name": "Barranco",
+    "osm_name": "Barranco",
+    "urbania_slug": "barranco--lima--lima",
+    "bbox": [
+      -12.1573,
+      -12.1306,
+      -77.0294,
+      -77.0125
+    ],
+    "center": [
+      -12.144,
+      -77.0203
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "miraflores": {
+    "name": "Miraflores",
+    "osm_name": "Miraflores",
+    "urbania_slug": "miraflores--lima--lima",
+    "bbox": [
+      -12.1401,
+      -12.1028,
+      -77.056,
+      -77.0013
+    ],
+    "center": [
+      -12.1215,
+      -77.0259
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "san-isidro": {
+    "name": "San Isidro",
+    "osm_name": "San Isidro",
+    "urbania_slug": "san-isidro--lima--lima",
+    "bbox": [
+      -12.1113,
+      -12.085,
+      -77.0608,
+      -77.0075
+    ],
+    "center": [
+      -12.0979,
+      -77.0354
+    ],
+    "zoom": 15,
+    "data": true
+  },
+  "san-borja": {
+    "name": "San Borja",
+    "osm_name": "San Borja",
+    "urbania_slug": "san-borja--lima--lima",
+    "bbox": [
+      -12.1124,
+      -12.0799,
+      -77.0121,
+      -76.9782
+    ],
+    "center": [
+      -12.0965,
+      -76.9957
+    ],
+    "zoom": 14,
+    "data": true
+  },
+  "surco": {
+    "name": "Santiago de Surco",
+    "osm_name": "Santiago de Surco",
+    "urbania_slug": "santiago-de-surco--lima--lima",
+    "bbox": [
+      -12.1743,
+      -12.0757,
+      -77.0184,
+      -76.9477
+    ],
+    "center": [
+      -12.1251,
+      -76.9822
+    ],
+    "zoom": 13,
+    "data": true
+  },
+  "la-molina": {
+    "name": "La Molina",
+    "osm_name": "La Molina",
+    "urbania_slug": "la-molina--lima--lima",
+    "bbox": [
+      -12.1238,
+      -12.0567,
+      -76.9761,
+      -76.884
+    ],
+    "center": [
+      -12.0902,
+      -76.9223
+    ],
+    "zoom": 13,
+    "data": true
   }
 }
