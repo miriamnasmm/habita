@@ -378,9 +378,9 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 /* ficha sin foto (placeholder de marca) */
 .hb-detail-media .ph-none{width:100%;height:100%;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;color:#9a8166;font-family:var(--sans);font-size:.84rem;font-weight:600;background:repeating-linear-gradient(135deg,#EFE3D5 0 14px,#E8D6C2 14px 28px)}
 /* CHIPS de perfil (compacto) */
-.hb-pchips{display:flex;gap:7px;padding:2px 20px 0;overflow-x:auto;scrollbar-width:none}
+.hb-pchips{display:flex;gap:5px;padding:10px 12px 0;overflow-x:auto;scrollbar-width:none}
 .hb-pchips::-webkit-scrollbar{display:none}
-.hb-pchip{white-space:nowrap;padding:8px 14px;border-radius:20px;font-size:.84rem;font-weight:600;background:#fff;border:1.5px solid var(--line);color:var(--espresso-2);transition:.15s}
+.hb-pchip{white-space:nowrap;padding:7px 9px;border-radius:20px;font-size:.76rem;font-weight:600;background:#fff;border:1.5px solid var(--line);color:var(--espresso-2);transition:.15s}
 .hb-pchip:hover{border-color:var(--clay-soft)}
 .hb-pchip.on{background:var(--clay);border-color:var(--clay);color:#fff}
 .hb-pchips-hint{padding:7px 20px 0;font-size:.78rem;color:var(--muted);line-height:1.35}
@@ -397,6 +397,12 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-seg:first-child{border-left:none}
 .hb-seg:hover{background:var(--cream-2)}
 .hb-seg.on{background:var(--clay);color:#fff}
+.hb-survey-go{margin-top:13px;width:100%;padding:11px;border-radius:11px;background:var(--clay);color:#fff;font-weight:600;font-size:.9rem;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.hb-survey-go:hover{background:var(--clay-deep)}
+.hb-survey-toggle{display:flex;align-items:center;gap:9px;width:calc(100% - 40px);margin:12px 20px 0;padding:11px 14px;border-radius:12px;background:var(--cream-2);border:1.5px solid var(--line);font-size:.86rem;font-weight:600;color:var(--espresso);cursor:pointer;transition:.15s}
+.hb-survey-toggle:hover{border-color:var(--clay-soft)}
+.hb-survey-toggle svg{color:var(--clay)}
+.hb-survey-chev{margin-left:auto;color:var(--muted);display:flex}
 /* FILTER BAR (botón colapsable) */
 .hb-dstats{margin:0 20px 6px;background:var(--cream-2);border:1px solid var(--line-2);border-radius:13px;padding:11px 13px}
 .hb-dstats-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
@@ -416,11 +422,13 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-near-r b{font-family:var(--serif);font-size:.95rem;color:var(--espresso)}
 .hb-near-panel input[type=range]{width:100%;margin:7px 0 4px;accent-color:var(--clay)}
 .hb-near-est{font-size:.72rem;color:var(--clay);font-weight:600}
-.hb-near-pin span{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--clay);transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff}
-.hb-near-pin svg{transform:rotate(45deg)}
+.hb-near-pin span{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#3a4a8c;box-shadow:0 3px 9px rgba(0,0,0,.4);border:3px solid #fff;position:relative}
+.hb-near-pin svg{transform:none}
+.hb-near-pin span::after{content:"";position:absolute;inset:0;border-radius:50%;animation:hbNearPulse 1.8s ease-out infinite;pointer-events:none}
+@keyframes hbNearPulse{0%{box-shadow:0 0 0 0 rgba(58,74,140,.5)}100%{box-shadow:0 0 0 18px rgba(58,74,140,0)}}
 .is-mobile .hb-near-panel{left:10px;right:auto;bottom:74px;width:210px}
-.hb-filterbar{display:flex;align-items:center;gap:10px;padding:12px 20px 4px}
-.hb-fbtn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.85rem;font-weight:600;color:var(--espresso);transition:.15s}
+.hb-filterbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px 4px}
+.hb-fbtn{display:flex;align-items:center;gap:6px;padding:8px 9px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.8rem;font-weight:600;color:var(--espresso);transition:.15s;white-space:nowrap}
 .hb-fbtn:hover{border-color:var(--clay-soft)}
 .hb-fbtn.on{border-color:var(--clay);background:#FCEFE6}
 .hb-fbtn svg{color:var(--clay)}
@@ -457,22 +465,25 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-cmp-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:.73rem;font-weight:600;color:var(--clay);background:#FCEFE6;border:none;border-radius:8px;padding:5px 9px;cursor:pointer;transition:.14s;white-space:nowrap}
 .hb-cmp-btn:hover{background:#F8E2D2}
 .hb-cmp-btn svg{color:var(--clay)}
-.hb-cmp-card{width:440px}
-.hb-cmp-sort{display:flex;gap:7px;margin:0 0 12px}
-.hb-cmp-sort button{flex:1;font-size:.78rem;font-weight:600;color:var(--muted);background:var(--cream-2);border:1px solid var(--line-2);border-radius:9px;padding:7px;cursor:pointer;transition:.14s}
-.hb-cmp-sort button.on{color:#fff;background:var(--clay);border-color:var(--clay)}
-.hb-cmp-head{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;padding:0 4px 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
-.hb-cmp-list{display:flex;flex-direction:column;max-height:52vh;overflow-y:auto;margin:0 -4px}
-.hb-cmp-row{display:grid;grid-template-columns:26px 1fr 120px 84px;gap:8px;align-items:center;padding:8px 4px;border:none;background:none;text-align:left;cursor:pointer;border-radius:9px;transition:.12s}
-.hb-cmp-row:hover{background:var(--cream-2)}
-.hb-cmp-rank{font-family:var(--serif);font-size:.92rem;font-weight:600;color:var(--clay);text-align:center}
-.hb-cmp-name{font-size:.86rem;font-weight:600;color:var(--espresso);display:flex;flex-direction:column;line-height:1.15}
-.hb-cmp-name small{font-size:.68rem;font-weight:500;color:var(--muted)}
-.hb-cmp-score{display:flex;align-items:center;gap:7px}
-.hb-cmp-bar{flex:1;height:7px;border-radius:4px;background:var(--cream-3);overflow:hidden}
-.hb-cmp-bar i{display:block;height:100%;border-radius:4px}
-.hb-cmp-score b{font-size:.82rem;color:var(--espresso);min-width:20px}
-.hb-cmp-ppm{font-size:.8rem;font-weight:600;color:var(--espresso-2);text-align:right}
+.hb-dc-card{width:440px}
+.hb-dc-sort{display:flex;gap:7px;margin:0 0 12px}
+.hb-dc-sort button{flex:1;font-size:.78rem;font-weight:600;color:var(--muted);background:var(--cream-2);border:1px solid var(--line-2);border-radius:9px;padding:7px;cursor:pointer;transition:.14s}
+.hb-dc-sort button.on{color:#fff;background:var(--clay);border-color:var(--clay)}
+.hb-dc-head{display:grid;grid-template-columns:30px 1fr 116px 84px;gap:8px;padding:0 6px 7px;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.hb-dc-head span:nth-child(3){text-align:left}
+.hb-dc-head span:nth-child(4){text-align:right}
+.hb-dc-list{display:flex;flex-direction:column;max-height:52vh;overflow-y:auto;margin:0 -4px}
+.hb-dc-row{display:grid;grid-template-columns:30px 1fr 116px 84px;gap:8px;align-items:center;padding:10px 6px;border:none;background:none;text-align:left;cursor:pointer;border-radius:9px;transition:.12s}
+.hb-dc-row+.hb-dc-row{border-top:1px solid var(--line-2)}
+.hb-dc-row:hover{background:var(--cream-2)}
+.hb-dc-rank{font-family:var(--serif);font-size:1rem;font-weight:600;color:#fff;background:var(--clay);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.hb-dc-name{font-size:.86rem;font-weight:600;color:var(--espresso);display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.hb-dc-name small{font-size:.68rem;font-weight:500;color:var(--muted)}
+.hb-dc-score{display:flex;align-items:center;gap:7px}
+.hb-dc-bar{flex:1;height:7px;border-radius:4px;background:var(--cream-3);overflow:hidden}
+.hb-dc-bar i{display:block;height:100%;border-radius:4px}
+.hb-dc-score b{font-size:.82rem;color:var(--espresso);min-width:20px}
+.hb-dc-ppm{font-size:.8rem;font-weight:600;color:var(--espresso-2);text-align:right}
 .hb-exp-row .l{font-size:.83rem;color:var(--espresso-2)}
 .hb-exp-row .bar{height:8px;background:var(--cream-3);border-radius:5px;overflow:hidden}
 .hb-exp-row .bar i{display:block;height:100%;border-radius:5px;background:var(--clay)}
@@ -499,7 +510,7 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-rc-fav.on{color:var(--clay);border-color:var(--clay)}
 .hb-rc-cmp.on{background:var(--clay);color:#fff;border-color:var(--clay)}
 /* toggle guardadas */
-.hb-savedtog{display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.85rem;font-weight:600;color:var(--espresso);transition:.15s}
+.hb-savedtog{display:flex;align-items:center;gap:6px;padding:8px 9px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.8rem;font-weight:600;color:var(--espresso);transition:.15s;white-space:nowrap}
 .hb-savedtog:hover{border-color:var(--clay-soft)}
 .hb-savedtog.on{border-color:var(--clay);background:#FCEFE6;color:var(--clay)}
 .hb-savedtog svg{color:var(--clay)}
@@ -624,6 +635,7 @@ const ICON={
   floor:"M4 20h16M7 20V8l5-3 5 3v12M10 20v-4h4v4",
   age:"M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   close:"M6 6l12 12M18 6L6 18",
+  pin:"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
   chev:"M9 6l6 6-6 6",
   chevL:"M15 18l-6-6 6-6",
   heart:"M20.8 5.6a5.4 5.4 0 0 0-7.7 0l-1.1 1.1-1.1-1.1a5.4 5.4 0 1 0-7.7 7.7l1.1 1.1 7.7 7.6 7.7-7.6 1.1-1.1a5.4 5.4 0 0 0 0-7.7z",
@@ -832,23 +844,23 @@ function openDistrictCompare(){
       ? ((a.medPpm||1e12)-(b.medPpm||1e12))
       : (b.avgScore-a.avgScore));
     const maxS=Math.max.apply(null,rows.map(r=>r.avgScore).concat(1));
-    const body=rows.map((r,i)=>`<button class="hb-cmp-row" data-id="${r.id}">
-        <span class="hb-cmp-rank">${i+1}</span>
-        <span class="hb-cmp-name">${esc(r.name)}<small>${r.count} props</small></span>
-        <span class="hb-cmp-score"><span class="hb-cmp-bar"><i style="width:${Math.round(r.avgScore/maxS*100)}%;background:${scoreColor(r.avgScore)}"></i></span><b>${r.avgScore}</b></span>
-        <span class="hb-cmp-ppm">${r.medPpm?('$'+r.medPpm.toLocaleString('en-US')+'/m²'):'—'}</span>
+    const body=rows.map((r,i)=>`<button class="hb-dc-row" data-id="${r.id}">
+        <span class="hb-dc-rank">${i+1}</span>
+        <span class="hb-dc-name">${esc(r.name)}<small>${r.count} props</small></span>
+        <span class="hb-dc-score"><span class="hb-dc-bar"><i style="width:${Math.round(r.avgScore/maxS*100)}%;background:${scoreColor(r.avgScore)}"></i></span><b>${r.avgScore}</b></span>
+        <span class="hb-dc-ppm">${r.medPpm?('$'+r.medPpm.toLocaleString('en-US')+'/m²'):'—'}</span>
       </button>`).join('');
-    host.querySelector('.hb-cmp-list').innerHTML=body;
+    host.querySelector('.hb-dc-list').innerHTML=body;
     host.querySelector('#cmp-by-score').classList.toggle('on',sortKey==='score');
     host.querySelector('#cmp-by-ppm').classList.toggle('on',sortKey==='ppm');
-    host.querySelectorAll('.hb-cmp-row').forEach(b=>b.onclick=()=>{ close(); selectDistrict(b.dataset.id); });
+    host.querySelectorAll('.hb-dc-row').forEach(b=>b.onclick=()=>{ close(); selectDistrict(b.dataset.id); });
   }
-  host.innerHTML=`<div class="hb-exp-card hb-cmp-card">
+  host.innerHTML=`<div class="hb-exp-card hb-dc-card">
     <div class="hb-exp-h"><h3>Comparar distritos</h3><button class="hb-exp-x" id="cmp-x" aria-label="Cerrar">${icon('close',18)}</button></div>
-    <p class="hb-exp-intro">Habitabilidad promedio según <b>tu perfil</b> (${profileLabel()}) y precio por m² típico. Toca un distrito para ir allá.</p>
-    <div class="hb-cmp-sort"><button id="cmp-by-score">Por habitabilidad</button><button id="cmp-by-ppm">Por precio/m²</button></div>
-    <div class="hb-cmp-head"><span></span><span>Distrito</span><span>Habitabilidad</span><span>Precio/m²</span></div>
-    <div class="hb-cmp-list"></div>
+    <p class="hb-exp-intro">Ranking de distritos por <b>habitabilidad promedio</b> para tu perfil (${profileLabel()}) y su <b>precio por m²</b> típico. Toca un distrito para ir allá.</p>
+    <div class="hb-dc-sort"><button id="cmp-by-score">Por habitabilidad</button><button id="cmp-by-ppm">Por precio/m²</button></div>
+    <div class="hb-dc-head"><span>#</span><span>Distrito</span><span>Habitabilidad</span><span>Precio/m²</span></div>
+    <div class="hb-dc-list"></div>
     <p class="hb-exp-foot">El ranking se recalcula con el perfil que elijas. Precio/m² = mediana de los avisos del distrito.</p>
   </div>`;
   document.body.appendChild(host);
@@ -1084,7 +1096,12 @@ function openDetail(vm){
     document.getElementById('d-next').onclick=()=>{idx=(idx+1)%vm.photos.length; upd();};
   }
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape') closeDetail();});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  const modal=document.querySelector('.hb-exp-modal, .hb-cmp-modal');   // explicador / comparar distritos / comparar propiedades
+  if(modal){ modal.remove(); return; }
+  closeDetail();
+});
 
 /* ---------- sidebar / filtros ---------- */
 function freshLabel(){
@@ -1129,7 +1146,7 @@ function renderFilters(){
   wireFilters();
 }
 /* chips de perfil (compacto) + mini-encuesta (Personalizado) */
-const PROFILE_SHORT={tranquilidad:'Tranquilidad',familia:'Familia',inversion:'Inversión',personalizado:'Personalizado'};
+const PROFILE_SHORT={tranquilidad:'Tranquilidad',familia:'Familia',inversion:'Inversión',personalizado:'Otro'};
 function renderChips(){
   const host=document.getElementById('profile-chips');
   host.innerHTML=`<div class="hb-pchips">`+PROFILE_LIST.map(p=>`<button class="hb-pchip ${p.key===state.profile?'on':''}" data-prof="${p.key}">${PROFILE_SHORT[p.key]||p.label}</button>`).join('')+`</div>
@@ -1141,23 +1158,31 @@ function renderChips(){
 }
 const LEVELS=[['nada','Nada',15],['algo','Algo',50],['mucho','Mucho',90]];
 function levelOf(v){return v<33?'nada':(v<70?'algo':'mucho');}
+let surveyOpen=true;
 function renderSurvey(){
   const host=document.getElementById('perso-survey');
-  if(state.profile!=='personalizado'){host.innerHTML=''; return;}
+  if(state.profile!=='personalizado'){ host.innerHTML=''; surveyOpen=true; return; }
+  if(!surveyOpen){                                   // plegada: solo un botón para reabrir
+    host.innerHTML=`<button class="hb-survey-toggle" id="survey-edit">${icon('sliders',15)}<span>Editar mis prioridades</span><span class="hb-survey-chev">${icon('chev',15)}</span></button>`;
+    document.getElementById('survey-edit').onclick=()=>{ surveyOpen=true; renderSurvey(); };
+    return;
+  }
   const rows=CWLABELS.map(([k,l])=>{
     const cur=levelOf(state.weights[k]);
     const segs=LEVELS.map(([id,lab,val])=>`<button class="hb-seg ${cur===id?'on':''}" data-k="${k}" data-val="${val}">${lab}</button>`).join('');
     return `<div class="hb-srow"><span class="hb-srow-l">${l}</span><div class="hb-seg-group">${segs}</div></div>`;
   }).join('');
   host.innerHTML=`<div class="hb-survey">
-    <div class="hb-survey-head"><strong>¿Qué te importa más?</strong><small>Marca cada cosa y el mapa se repinta al instante.</small></div>
+    <div class="hb-survey-head"><strong>¿Qué te importa más?</strong><small>Marca cada cosa y pulsa <b>Ver resultados</b>.</small></div>
     ${rows}
+    <button class="hb-survey-go" id="survey-go">${icon('check',16,'none','#fff',2.4)}Ver resultados</button>
   </div>`;
   host.querySelectorAll('.hb-seg').forEach(b=>b.onclick=()=>{
     const k=b.dataset.k; state.weights[k]=+b.dataset.val;
     host.querySelectorAll(`.hb-seg[data-k="${k}"]`).forEach(x=>x.classList.toggle('on',x===b));
-    recompute();
   });
+  const go=document.getElementById('survey-go');
+  if(go) go.onclick=()=>{ recompute(); surveyOpen=false; renderSurvey(); const rp=document.getElementById('results-pane'); if(rp) rp.scrollIntoView({behavior:'smooth',block:'nearest'}); };
 }
 /* barra de filtros (botón colapsable) */
 function filterCount(){let n=0; if(state.price[0]!==80000||state.price[1]!==350000)n++; if(state.beds.length)n++; if(state.avoidNoisy)n++; if(state.parkMax!==800)n++; if(state.floorMax!==20)n++; return n;}
@@ -1196,16 +1221,16 @@ function drawNear(){
   if(!state.near) return;
   const ll=[state.near.lat,state.near.lng];
   if(!nearMarker){
-    nearMarker=L.marker(ll,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:'hb-near-pin',html:`<span>${icon('pin',18,'none','#fff',0)}</span>`,iconSize:[30,30],iconAnchor:[15,28]})}).addTo(map);
+    nearMarker=L.marker(ll,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:'hb-near-pin',html:`<span>${icon('pin',16,'none','#fff',2)}</span>`,iconSize:[34,34],iconAnchor:[17,17]})}).addTo(map);
     nearMarker.on('drag',e=>{ state.near.lat=e.latlng.lat; state.near.lng=e.latlng.lng; if(nearCircle) nearCircle.setLatLng(e.latlng); });
     nearMarker.on('dragend',()=>{ recompute(); });
   } else nearMarker.setLatLng(ll);
-  if(!nearCircle) nearCircle=L.circle(ll,{radius:state.near.radiusM,color:'#C2562F',weight:1.5,fillColor:'#C2562F',fillOpacity:.07,interactive:false}).addTo(map);
+  if(!nearCircle) nearCircle=L.circle(ll,{radius:state.near.radiusM,color:'#3a4a8c',weight:1.5,fillColor:'#3a4a8c',fillOpacity:.07,interactive:false}).addTo(map);
   else { nearCircle.setLatLng(ll); nearCircle.setRadius(state.near.radiusM); }
 }
-function setNearPoint(latlng){
+function setNearPoint(latlng,label){
   state.nearMode=false; const mp=document.getElementById('map'); if(mp) mp.style.cursor='';
-  state.near={lat:latlng.lat, lng:latlng.lng, radiusM:(state.near&&state.near.radiusM)||1500};
+  state.near={lat:latlng.lat, lng:latlng.lng, radiusM:(state.near&&state.near.radiusM)||1500, label:label||null};
   drawNear(); renderFilterbar(); renderNearPanel(); recompute();
 }
 function clearNear(){
@@ -1220,7 +1245,7 @@ function renderNearPanel(){
   let p=document.getElementById('near-panel');
   if(!state.near){ if(p) p.remove(); return; }
   if(!p){ p=document.createElement('div'); p.id='near-panel'; p.className='hb-near-panel'; document.querySelector('.dirA-map').appendChild(p); }
-  p.innerHTML=`<div class="hb-near-h">${icon('pin',14)}<span>Cerca de tu punto</span><button id="near-x" aria-label="Quitar">${icon('close',15)}</button></div>
+  p.innerHTML=`<div class="hb-near-h">${icon('pin',14)}<span>${state.near.label?('Cerca de '+esc(state.near.label)):'Cerca de tu punto'}</span><button id="near-x" aria-label="Quitar">${icon('close',15)}</button></div>
     <div class="hb-near-r"><span>Radio</span><b id="near-km">${(state.near.radiusM/1000).toFixed(1)} km</b></div>
     <input type="range" min="300" max="5000" step="100" id="near-rad" value="${state.near.radiusM}">
     <div class="hb-near-est" id="near-est">${nearEst(state.near.radiusM)}</div>`;
@@ -1246,7 +1271,7 @@ function renderFilterbar(){
     document.getElementById('filters').style.display=state.showFilters?'':'none';
     renderFilterbar();
   };
-  document.getElementById('nearbtn').onclick=()=>{ state.near?clearNear():startNearMode(); renderFilterbar(); };
+  document.getElementById('nearbtn').onclick=()=>{ (state.near||state.nearMode)?clearNear():startNearMode(); renderFilterbar(); };
   document.getElementById('savedtog').onclick=()=>{ state.showSaved=!state.showSaved; renderFilterbar(); renderResults(); };
   const fc=document.getElementById('fclear'); if(fc) fc.onclick=()=>{ clearFilters(); };
 }
@@ -1711,7 +1736,7 @@ function buildSearch(){
       <span class="hb-chevd">${icon('chev',16)}</span>
     </button>
     <div class="hb-search-panel" id="search-panel" hidden>
-      <input class="hb-search-input" id="search-input" placeholder="Buscar calle, parque o distrito…" autocomplete="off">
+      <input class="hb-search-input" id="search-input" placeholder="Buscar zona, calle, colegio, hospital…" autocomplete="off">
       <div class="hb-search-list" id="search-list"></div>
     </div>`;
   document.getElementById('search-toggle').onclick=(e)=>{
@@ -1756,11 +1781,29 @@ function renderSearchResults(q){
   if(avs.length){
     html+='<div class="hb-srch-group">Avenidas</div>'+avs.map(a=>`<button class="hb-dist" data-kind="av" data-key="${esc(a.name)}"><span class="hb-dist-ic">${icon('road',14,'none','#B6452B')}</span><span class="hb-dist-name">${esc(a.name)}</span></button>`).join('');
   }
-  if(!html) html=`<div class="hb-srch-empty">Sin coincidencias en Pueblo Libre.<br><small>Pulsa Enter para buscar “${esc(q)}” en el mapa.</small></div>`;
+  // Lugares de referencia (colegios, salud, otros POI) → fijan el punto de cercanía
+  if(nq.length){
+    const poiGroups=[
+      {arr:MAP_GEO.schools, group:'Colegios', ic:'school', col:'#5E76A8'},
+      {arr:MAP_GEO.health,  group:'Salud',    ic:'med',    col:'#2E9E8F'}
+    ];
+    poiGroups.forEach(g=>{
+      const hits=(g.arr||[]).filter(p=>p.name&&norm(p.name).includes(nq)).slice(0,5);
+      if(hits.length) html+=`<div class="hb-srch-group">${g.group}</div>`+hits.map(p=>`<button class="hb-dist" data-kind="poi" data-key="${p.lat},${p.lng}" data-name="${esc(p.name)}"><span class="hb-dist-ic">${icon(g.ic,14,'none',g.col)}</span><span class="hb-dist-name">${esc(p.name)}</span><span class="hb-dist-badge data">Fijar punto</span></button>`).join('');
+    });
+    const otros=[].concat(MAP_GEO.markets||[],MAP_GEO.malls||[],MAP_GEO.universities||[],MAP_GEO.banks||[],MAP_GEO.pharmacies||[],MAP_GEO.kindergarten||[],MAP_GEO.police||[]).filter(p=>p.name&&norm(p.name).includes(nq)).slice(0,6);
+    if(otros.length) html+='<div class="hb-srch-group">Lugares</div>'+otros.map(p=>`<button class="hb-dist" data-kind="poi" data-key="${p.lat},${p.lng}" data-name="${esc(p.name)}"><span class="hb-dist-ic">${icon('pin',14,'none','var(--clay)')}</span><span class="hb-dist-name">${esc(p.name)}</span><span class="hb-dist-badge data">Fijar punto</span></button>`).join('');
+  }
+  if(!html) html=`<div class="hb-srch-empty">Sin coincidencias.<br><small>Pulsa Enter para buscar “${esc(q)}” en el mapa.</small></div>`;
   el.innerHTML=html;
-  el.querySelectorAll('.hb-dist').forEach(b=>b.onclick=()=>onSearchPick(b.dataset.kind,b.dataset.key));
+  el.querySelectorAll('.hb-dist').forEach(b=>b.onclick=()=>onSearchPick(b.dataset.kind,b.dataset.key,b.dataset.name));
 }
-function onSearchPick(kind,key){
+function onSearchPick(kind,key,name){
+  if(kind==='poi'){
+    const parts=String(key).split(','), lat=+parts[0], lng=+parts[1];
+    if(isFinite(lat)&&isFinite(lng)){ closeSearch(); map.setView([lat,lng],16,{animate:true}); setNearPoint({lat,lng}, name||null); }
+    return;
+  }
   if(kind==='dist'){ selectDistrict(key); return; }
   if(kind==='street'){
     const items=VMS.filter(vm=>streetOf(vm.address)===key);
