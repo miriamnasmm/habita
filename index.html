@@ -398,6 +398,14 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-seg:hover{background:var(--cream-2)}
 .hb-seg.on{background:var(--clay);color:#fff}
 /* FILTER BAR (botón colapsable) */
+.hb-dstats{margin:0 20px 6px;background:var(--cream-2);border:1px solid var(--line-2);border-radius:13px;padding:11px 13px}
+.hb-dstats-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
+.hb-dstats-h strong{font-family:var(--serif);font-size:1rem;color:var(--espresso)}
+.hb-dstats-h span{font-size:.72rem;color:var(--muted);font-weight:600}
+.hb-dstats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hb-dstats-cell{display:flex;flex-direction:column;gap:1px}
+.hb-dstats-cell b{font-family:var(--serif);font-size:1.05rem;color:var(--espresso);line-height:1.1}
+.hb-dstats-cell small{font-size:.64rem;color:var(--muted);line-height:1.2}
 .hb-filterbar{display:flex;align-items:center;gap:10px;padding:12px 20px 4px}
 .hb-fbtn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.85rem;font-weight:600;color:var(--espresso);transition:.15s}
 .hb-fbtn:hover{border-color:var(--clay-soft)}
@@ -781,6 +789,25 @@ function districtStats(){
     const medPpm=ppms.length?ppms[Math.floor(ppms.length/2)]:null;
     return {id, name:DIST_NAME(id), count:items.length, avgScore, medPpm};
   }).filter(Boolean);
+}
+// tarjeta de stats del distrito seleccionado (arriba de los resultados)
+function districtStatsCard(){
+  const id=state.district; if(!id) return '';
+  const items=VMS.filter(v=>v.district===id && (v.op||'venta')===state.op);
+  if(!items.length) return '';
+  const scores=items.map(scoreOf), avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  const ppms=items.map(v=>v.pricePerM2).filter(x=>x>0).sort((a,b)=>a-b);
+  const medPpm=ppms.length?ppms[Math.floor(ppms.length/2)]:null;
+  const vCount=VMS.reduce((a,v)=>a+(v.district===id&&(v.op||'venta')==='venta'?1:0),0);
+  const aCount=RENT_LOADED?VMS.reduce((a,v)=>a+(v.district===id&&v.op==='alquiler'?1:0),0):(((MAP_DATA.rent_counts||{})[id])||0);
+  return `<div class="hb-dstats">
+    <div class="hb-dstats-h"><strong>${esc(DIST_NAME(id))}</strong><span>${items.length} en ${state.op==='alquiler'?'alquiler':'venta'}</span></div>
+    <div class="hb-dstats-row">
+      <div class="hb-dstats-cell"><b style="color:${scoreColor(avg)}">${avg}</b><small>Habitabilidad prom.</small></div>
+      <div class="hb-dstats-cell"><b>${medPpm?'$'+medPpm.toLocaleString('en-US'):'—'}</b><small>Precio/m²${state.op==='alquiler'?'/mes':''}</small></div>
+      <div class="hb-dstats-cell"><b>${vCount} / ${aCount}</b><small>venta / alquiler</small></div>
+    </div>
+  </div>`;
 }
 function openDistrictCompare(){
   let sortKey='score';
@@ -1498,7 +1525,7 @@ function renderResults(){
     const ec=document.getElementById('empty-clear'); if(ec) ec.onclick=()=>{clearFilters();};
     return;
   }
-  host.innerHTML=sortBar+list.map(vm=>{
+  host.innerHTML=districtStatsCard()+sortBar+list.map(vm=>{
     const color=scoreColor(vm.score);
     const ph=`${(vm.photos&&vm.photos.length)?`<img src="${vm.photos[0]}" loading="lazy" onerror="this.style.display='none'">`:''}<span class="hb-ph">${icon('home',22,'none','#C9AE92',1.7)}</span>`;
     const constr=vm.construction?`<span class="hb-rcard-constr">Proyecto</span>`:'';
