@@ -406,6 +406,19 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;bac
 .hb-dstats-cell{display:flex;flex-direction:column;gap:1px}
 .hb-dstats-cell b{font-family:var(--serif);font-size:1.05rem;color:var(--espresso);line-height:1.1}
 .hb-dstats-cell small{font-size:.64rem;color:var(--muted);line-height:1.2}
+/* buscar por cercanía */
+.hb-near-panel{position:absolute;left:14px;bottom:14px;z-index:520;width:228px;background:#fff;border-radius:13px;border:1px solid var(--line);box-shadow:var(--shadow);padding:12px 14px}
+.hb-near-h{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:var(--espresso);margin-bottom:9px}
+.hb-near-h>svg{color:var(--clay)}
+.hb-near-h span{flex:1}
+.hb-near-h button{width:24px;height:24px;border-radius:50%;background:var(--cream-2);display:flex;align-items:center;justify-content:center;color:var(--espresso);border:none;cursor:pointer;flex:0 0 auto}
+.hb-near-r{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:var(--muted)}
+.hb-near-r b{font-family:var(--serif);font-size:.95rem;color:var(--espresso)}
+.hb-near-panel input[type=range]{width:100%;margin:7px 0 4px;accent-color:var(--clay)}
+.hb-near-est{font-size:.72rem;color:var(--clay);font-weight:600}
+.hb-near-pin span{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--clay);transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff}
+.hb-near-pin svg{transform:rotate(45deg)}
+.is-mobile .hb-near-panel{left:10px;right:auto;bottom:74px;width:210px}
 .hb-filterbar{display:flex;align-items:center;gap:10px;padding:12px 20px 4px}
 .hb-fbtn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;background:#fff;border:1.5px solid var(--line);font-size:.85rem;font-weight:600;color:var(--espresso);transition:.15s}
 .hb-fbtn:hover{border-color:var(--clay-soft)}
@@ -666,7 +679,8 @@ const state={
   weights:{quiet:60,park:60,commerce:50,commute:45,price:40,schools:60,security:55},
   price:[80000,350000], beds:[],
   parkMax:800, floorMax:20, avoidNoisy:true, includeUnknown:true,
-  fino:false, selectedId:null, fav:{}, mobile:false, showFilters:false, showSaved:false, compare:[], sort:'score', parkStyle:'full', district:null
+  fino:false, selectedId:null, fav:{}, mobile:false, showFilters:false, showSaved:false, compare:[], sort:'score', parkStyle:'full', district:null,
+  near:null, nearMode:false
 };
 const SORTS=[
   {key:'score',label:'Mayor habitabilidad'},
@@ -915,6 +929,8 @@ function buildMarkers(){
 function passes(vm){
   if((vm.op||'venta')!==state.op) return false;                      // venta vs alquiler
   if(state.district && vm.district!==state.district) return false;   // filtro por zona
+  if(state.near && map.distance([vm.lat,vm.lng],[state.near.lat,state.near.lng])>state.near.radiusM) return false;  // cercanía
+
   if(vm.priceUSD!=null && (vm.priceUSD<state.price[0]||vm.priceUSD>state.price[1])) return false;
   if(state.beds.length){const ok=state.beds.some(b=>b===4?(vm.beds>=4):(vm.beds===b)); if(!ok) return false;}
   const parkUnknown=vm.parkDist==null||vm.parkDist>1200;
@@ -1173,11 +1189,55 @@ function setOp(op){
     loadRentData(()=>{ setOpLoading(false); apply(); });
   } else apply();
 }
+/* ---------- buscar por cercanía (fija un punto y filtra por radio) ---------- */
+let nearMarker=null, nearCircle=null;
+function startNearMode(){ state.nearMode=true; const mp=document.getElementById('map'); if(mp) mp.style.cursor='crosshair'; toast('Toca el mapa para fijar tu punto (trabajo, colegio…)'); }
+function drawNear(){
+  if(!state.near) return;
+  const ll=[state.near.lat,state.near.lng];
+  if(!nearMarker){
+    nearMarker=L.marker(ll,{draggable:true,zIndexOffset:1000,icon:L.divIcon({className:'hb-near-pin',html:`<span>${icon('pin',18,'none','#fff',0)}</span>`,iconSize:[30,30],iconAnchor:[15,28]})}).addTo(map);
+    nearMarker.on('drag',e=>{ state.near.lat=e.latlng.lat; state.near.lng=e.latlng.lng; if(nearCircle) nearCircle.setLatLng(e.latlng); });
+    nearMarker.on('dragend',()=>{ recompute(); });
+  } else nearMarker.setLatLng(ll);
+  if(!nearCircle) nearCircle=L.circle(ll,{radius:state.near.radiusM,color:'#C2562F',weight:1.5,fillColor:'#C2562F',fillOpacity:.07,interactive:false}).addTo(map);
+  else { nearCircle.setLatLng(ll); nearCircle.setRadius(state.near.radiusM); }
+}
+function setNearPoint(latlng){
+  state.nearMode=false; const mp=document.getElementById('map'); if(mp) mp.style.cursor='';
+  state.near={lat:latlng.lat, lng:latlng.lng, radiusM:(state.near&&state.near.radiusM)||1500};
+  drawNear(); renderFilterbar(); renderNearPanel(); recompute();
+}
+function clearNear(){
+  state.near=null; state.nearMode=false; const mp=document.getElementById('map'); if(mp) mp.style.cursor='';
+  if(nearMarker){ map.removeLayer(nearMarker); nearMarker=null; }
+  if(nearCircle){ map.removeLayer(nearCircle); nearCircle=null; }
+  const p=document.getElementById('near-panel'); if(p) p.remove();
+  renderFilterbar(); recompute();
+}
+function nearEst(m){ return '≈ '+Math.round(m/1000/5*60)+' min a pie · '+Math.round(m/1000/22*60)+' min en auto'; }
+function renderNearPanel(){
+  let p=document.getElementById('near-panel');
+  if(!state.near){ if(p) p.remove(); return; }
+  if(!p){ p=document.createElement('div'); p.id='near-panel'; p.className='hb-near-panel'; document.querySelector('.dirA-map').appendChild(p); }
+  p.innerHTML=`<div class="hb-near-h">${icon('pin',14)}<span>Cerca de tu punto</span><button id="near-x" aria-label="Quitar">${icon('close',15)}</button></div>
+    <div class="hb-near-r"><span>Radio</span><b id="near-km">${(state.near.radiusM/1000).toFixed(1)} km</b></div>
+    <input type="range" min="300" max="5000" step="100" id="near-rad" value="${state.near.radiusM}">
+    <div class="hb-near-est" id="near-est">${nearEst(state.near.radiusM)}</div>`;
+  p.querySelector('#near-x').onclick=clearNear;
+  p.querySelector('#near-rad').oninput=e=>{
+    state.near.radiusM=+e.target.value; drawNear();
+    p.querySelector('#near-km').textContent=(state.near.radiusM/1000).toFixed(1)+' km';
+    p.querySelector('#near-est').textContent=nearEst(state.near.radiusM);
+    recompute();
+  };
+}
 function renderFilterbar(){
   const active=filterCount();
   const saved=savedCount();
   document.getElementById('filterbar').innerHTML=`<div class="hb-filterbar">
     <button class="hb-fbtn ${state.showFilters?'on':''}" id="fbtn">${icon('sliders',15)}<span>Filtros</span>${active?`<span class="hb-fbadge">${active}</span>`:''}</button>
+    <button class="hb-fbtn ${state.near||state.nearMode?'on':''}" id="nearbtn">${icon('pin',15)}<span>Cercanía</span></button>
     <button class="hb-savedtog ${state.showSaved?'on':''}" id="savedtog">${icon('heart',15,state.showSaved?'currentColor':'none')}<span>Guardadas</span>${saved?`<span class="hb-fbadge alt">${saved}</span>`:''}</button>
     <button class="hb-fclear" id="fclear" ${active?'':'disabled'}>Limpiar</button>
   </div>`;
@@ -1186,6 +1246,7 @@ function renderFilterbar(){
     document.getElementById('filters').style.display=state.showFilters?'':'none';
     renderFilterbar();
   };
+  document.getElementById('nearbtn').onclick=()=>{ state.near?clearNear():startNearMode(); renderFilterbar(); };
   document.getElementById('savedtog').onclick=()=>{ state.showSaved=!state.showSaved; renderFilterbar(); renderResults(); };
   const fc=document.getElementById('fclear'); if(fc) fc.onclick=()=>{ clearFilters(); };
 }
@@ -1354,6 +1415,7 @@ function updatePoiVisibility(){
   });
 }
 map.on('zoomend',updatePoiVisibility);
+map.on('click',e=>{ if(state.nearMode) setNearPoint(e.latlng); });   // fijar punto de cercanía
 function setLayer(key,on){
   layerState[key]=on;
   if(key==='parks'){
