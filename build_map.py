@@ -299,27 +299,40 @@ def combine_and_render():
     geo["boundaries"] = boundaries  # lista de anillos (uno por distrito activo)
     comps = [r["_score"]["composite"] for r in all_listings if r.get("_score")]
     score_range = [min(comps), max(comps)] if comps else [0.0, 1.0]
+    # separar venta (carga inicial) de alquiler (carga diferida)
+    venta_listings = [r for r in all_listings if r.get("op") != "alquiler"]
+    rent_listings = [r for r in all_listings if r.get("op") == "alquiler"]
+    rent_counts = {}
+    for r in rent_listings:
+        d = r.get("district")
+        if d:
+            rent_counts[d] = rent_counts.get(d, 0) + 1
     data = {
-        "listings": all_listings,
+        "listings": venta_listings,
         "score_range": score_range,
         "districts": cfg,
         "active_districts": active,
+        "rent_total": len(rent_listings),
+        "rent_counts": rent_counts,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     data_json = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    rent_json = json.dumps({"listings": rent_listings}, ensure_ascii=False, separators=(",", ":"))
     geo_json = json.dumps(geo, ensure_ascii=False, separators=(",", ":"))
-    OUT_DATA.write_text(data_json)  # map_data.json (referencia)
+    OUT_DATA.write_text(data_json)  # map_data.json (referencia, solo venta)
 
-    # Datos externos: el HTML los carga con <script src> → HTML chico, carga
-    # rápida (con loader) y escala a muchos distritos sin inflar el HTML.
+    # Datos externos: venta al inicio; alquiler en archivo aparte (carga al tocar "Alquilar").
     (ROOT / "map_data.js").write_text("window.MAP_DATA = " + data_json + ";\n")
+    (ROOT / "map_data_rent.js").write_text("window.MAP_DATA_RENT = " + rent_json + ";\n")
     (ROOT / "map_geo.js").write_text("window.MAP_GEO = " + geo_json + ";\n")
     OUT_HTML.write_text(TEMPLATE.read_text())  # plantilla tal cual (sin inyección)
 
     html_kb = OUT_HTML.stat().st_size / 1024
     data_kb = (ROOT / "map_data.js").stat().st_size / 1024
-    print(f"Wrote map.html ({html_kb:.1f} KB) + map_data.js ({data_kb:.1f} KB) + map_geo.js — "
-          f"{len(all_listings)} listings (−{dropped_outliers} outliers fuera de bbox), distritos: {active}")
+    rent_kb = (ROOT / "map_data_rent.js").stat().st_size / 1024
+    print(f"Wrote map.html ({html_kb:.1f} KB) + map_data.js ({data_kb:.1f} KB, venta) + "
+          f"map_data_rent.js ({rent_kb:.1f} KB, alquiler) + map_geo.js — "
+          f"{len(venta_listings)} venta + {len(rent_listings)} alquiler (−{dropped_outliers} outliers), distritos: {active}")
 
 
 def main():

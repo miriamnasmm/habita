@@ -687,7 +687,7 @@ function weightsFor(){
 }
 
 /* ---------- view-models desde datos reales ---------- */
-const VMS=(MAP_DATA.listings||[]).map(r=>{
+function adaptListings(listings){ return (listings||[]).map(r=>{
   const s=r._score||{};
   const photos=(r.thumbs&&r.thumbs.length)?r.thumbs.slice(0,8):((r.fallback_images||[]).slice(0,8));
   return {
@@ -709,8 +709,25 @@ const VMS=(MAP_DATA.listings||[]).map(r=>{
     metroName:s.metro_name, metroDist:s.metro_dist_m,
     score:0, rank:0
   };
-});
+}); }
+let VMS=adaptListings(MAP_DATA.listings);   // venta al inicio; alquiler se agrega al tocar "Alquilar"
+let RENT_LOADED=false;
 const byId=id=>VMS.find(v=>v.id===id);
+function loadRentData(cb){
+  if(RENT_LOADED || window.MAP_DATA_RENT){ if(!RENT_LOADED && window.MAP_DATA_RENT){ ingestRent(); } return cb&&cb(); }
+  const sc=document.createElement('script'); sc.src='map_data_rent.js';
+  sc.onload=()=>{ ingestRent(); cb&&cb(); };
+  sc.onerror=()=>{ cb&&cb(); };
+  document.head.appendChild(sc);
+}
+function ingestRent(){
+  if(RENT_LOADED) return;
+  const add=adaptListings((window.MAP_DATA_RENT||{}).listings);
+  VMS=VMS.concat(add);
+  RENT_LOADED=true;
+  add.forEach(v=>{ if(v.district) DIST_COUNT[v.district]=(DIST_COUNT[v.district]||0)+1; });
+  buildMarkers();          // crea marcadores solo para los nuevos (idempotente)
+}
 
 function scoreOf(vm){
   const w=weightsFor(); let s=0,t=0;
@@ -859,6 +876,7 @@ function pinIcon(vm,sel){
 }
 function buildMarkers(){
   VMS.forEach(vm=>{
+    if(markers[vm.id]) return;            // idempotente: no recrea los existentes
     const m=L.marker([vm.lat,vm.lng],{icon:pinIcon(vm,false)});
     m._vm=vm;
     m.on('click',()=>selectProperty(vm.id));
@@ -1108,15 +1126,25 @@ function renderOpToggle(){
   </div>`;
   el.querySelectorAll('button').forEach(b=>b.onclick=()=>setOp(b.dataset.op));
 }
+function setOpLoading(on){
+  const el=document.getElementById('op-toggle'); if(!el) return;
+  const b=el.querySelector('[data-op="alquiler"]'); if(b){ b.textContent=on?'Cargando…':'Alquilar'; b.style.opacity=on?'.7':''; }
+}
 function setOp(op){
   if(op===state.op || (op!=='venta'&&op!=='alquiler')) return;
-  state.op=op;
-  state.price=PRICE_DEFAULT[op].slice();
-  state.district=null;
-  const sc=document.getElementById('search-current'); if(sc) sc.textContent='Todas las zonas';
-  renderOpToggle(); renderFilters(); renderFilterbar(); recompute();
-  const pts=VMS.filter(v=>(v.op||'venta')===op && v.lat && v.lng).map(v=>[v.lat,v.lng]);
-  if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[30,30]});
+  const apply=()=>{
+    state.op=op;
+    state.price=PRICE_DEFAULT[op].slice();
+    state.district=null;
+    const sc=document.getElementById('search-current'); if(sc) sc.textContent='Todas las zonas';
+    renderOpToggle(); renderFilters(); renderFilterbar(); recompute();
+    const pts=VMS.filter(v=>(v.op||'venta')===op && v.lat && v.lng).map(v=>[v.lat,v.lng]);
+    if(pts.length>1) map.fitBounds(L.latLngBounds(pts),{padding:[30,30]});
+  };
+  if(op==='alquiler' && !RENT_LOADED){   // primera vez: baja map_data_rent.js
+    setOpLoading(true);
+    loadRentData(()=>{ setOpLoading(false); apply(); });
+  } else apply();
 }
 function renderFilterbar(){
   const active=filterCount();
@@ -1568,6 +1596,15 @@ function openCompare(){
 // Lista de distritos construida desde la data real (todos los activos aparecen en el buscador "Zona").
 const DIST_COUNT={}; VMS.forEach(v=>{ if(v.district) DIST_COUNT[v.district]=(DIST_COUNT[v.district]||0)+1; });
 const DIST_NAME=id=>((MAP_DATA&&MAP_DATA.districts&&MAP_DATA.districts[id]&&MAP_DATA.districts[id].name)||id);
+// conteos del modo actual (alquiler puede no estar cargado aún → usa rent_counts del payload de venta)
+function opCount(id){
+  if(state.op==='alquiler' && !RENT_LOADED) return ((MAP_DATA.rent_counts||{})[id])||0;
+  return VMS.reduce((a,v)=>a+(v.district===id&&(v.op||'venta')===state.op?1:0),0);
+}
+function opTotalCount(){
+  if(state.op==='alquiler' && !RENT_LOADED) return MAP_DATA.rent_total||0;
+  return VMS.reduce((a,v)=>a+((v.op||'venta')===state.op?1:0),0);
+}
 const DISTRICTS=(function(){
   const A=(MAP_DATA&&MAP_DATA.active_districts)||['pueblo-libre'];
   const C=(MAP_DATA&&MAP_DATA.districts)||{};
@@ -1618,8 +1655,8 @@ function renderSearchResults(q){
   const showAll=!nq.length;
   if(dist.length||showAll){
     html+='<div class="hb-srch-group">Zonas</div>';
-    if(showAll) html+=`<button class="hb-dist ${!state.district?'on':''}" data-kind="dist" data-key="__all__"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">Todas las zonas</span><span class="hb-dist-badge data">${VMS.length}</span></button>`;
-    html+=dist.map(d=>`<button class="hb-dist ${d.id===state.district?'on':''}" data-kind="dist" data-key="${d.id}"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">${esc(d.name)}</span><span class="hb-dist-badge data">${d.count}</span></button>`).join('');
+    if(showAll) html+=`<button class="hb-dist ${!state.district?'on':''}" data-kind="dist" data-key="__all__"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">Todas las zonas</span><span class="hb-dist-badge data">${opTotalCount()}</span></button>`;
+    html+=dist.map(d=>`<button class="hb-dist ${d.id===state.district?'on':''}" data-kind="dist" data-key="${d.id}"><span class="hb-dist-ic">${icon('search',14,'none','var(--muted)')}</span><span class="hb-dist-name">${esc(d.name)}</span><span class="hb-dist-badge data">${opCount(d.id)}</span></button>`).join('');
   }
   if(streets.length){
     html+='<div class="hb-srch-group">Calles y direcciones</div>'+streets.map(s=>`<button class="hb-dist" data-kind="street" data-key="${esc(s.name)}"><span class="hb-dist-ic">${icon('pin',14,'none','var(--clay)')}</span><span class="hb-dist-name">${esc(s.name)}</span><span class="hb-dist-badge data">${s.items.length} aviso${s.items.length>1?'s':''}</span></button>`).join('');
