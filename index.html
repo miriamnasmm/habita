@@ -11,11 +11,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <!-- Datos reales (los mismos del sitio vanilla): setean window.MAP_GEO / window.MAP_DATA -->
-    <script src="/habita/map_geo.js"></script>
-    <script src="/habita/map_data.js"></script>
-    <script type="module" crossorigin src="/habita/assets/index-BcFon27x.js"></script>
-    <link rel="stylesheet" crossorigin href="/habita/assets/index-BAplsW20.css">
+    <!-- Geo (parques, colegios…) sigue por script; setea window.MAP_GEO. -->
+    <script src="https://habita.homes/map_geo.js"></script>
+    <!-- Los listings + meta se cargan desde la API por fetch en main.jsx. -->
+    <script type="module" crossorigin src="/habita/assets/index-CNOhqbLd.js"></script>
+    <link rel="stylesheet" crossorigin href="/habita/assets/index-B23orjT1.css">
   </head>
   <body>
     <div id="boot-loader" style="position:fixed;inset:0;z-index:9999;background:#F8F0EA;display:flex;align-items:center;justify-content:center;gap:14px;flex-direction:column;color:#8A6F62;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:.95rem">
