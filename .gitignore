@@ -1,0 +1,22 @@
+# ---- Credenciales: nunca subir ----
+.env
+.env.*
+!.env.example
+
+# ---- Frontend (habita-front) ----
+habita-front/node_modules/
+habita-front/dist/
+habita-front/.vite/
+
+# ---- Backend (habita-back) ----
+habita-back/tmp/
+habita-back/log/
+habita-back/storage/
+habita-back/.bundle/
+habita-back/vendor/bundle/
+habita-back/config/master.key
+habita-back/config/credentials/*.key
+
+# ---- Sistema ----
+.DS_Store
+*.log

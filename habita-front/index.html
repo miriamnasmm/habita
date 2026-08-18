@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Habita · Lima</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <!-- Geo (parques, colegios…) sigue por script; setea window.MAP_GEO. -->
+    <script src="https://api.habita.homes/map_geo.js"></script>
+    <!-- Los listings + meta se cargan desde la API por fetch en main.jsx. -->
+  </head>
+  <body>
+    <div id="boot-loader" style="position:fixed;inset:0;z-index:9999;background:#F8F0EA;display:flex;align-items:center;justify-content:center;gap:14px;flex-direction:column;color:#8A6F62;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:.95rem">
+      <div style="width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#9A3B2C,#79281D);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Newsreader',Georgia,serif;font-weight:600;font-size:1.7rem;box-shadow:0 10px 30px -12px rgba(52,28,22,.4)">H</div>
+      <span>Cargando Habita…</span>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
