@@ -11,8 +11,8 @@ now = Time.current
 total = 0
 
 { "venta" => "map_data.js", "alquiler" => "map_data_rent.js" }.each do |op_label, file|
-  # Los datos originales viven en el front (monorepo): habita-front/public/
-  listings = load_listings(Rails.root.join("..", "habita-front", "public", file))
+  # Los datos originales viven en el front (monorepo): frontend/public/
+  listings = load_listings(Rails.root.join("..", "frontend", "public", file))
   rows = listings.map do |r|
     {
       listing_id: r["id"],

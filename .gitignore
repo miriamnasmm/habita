@@ -3,19 +3,19 @@
 .env.*
 !.env.example
 
-# ---- Frontend (habita-front) ----
-habita-front/node_modules/
-habita-front/dist/
-habita-front/.vite/
+# ---- Frontend (frontend) ----
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
 
-# ---- Backend (habita-back) ----
-habita-back/tmp/
-habita-back/log/
-habita-back/storage/
-habita-back/.bundle/
-habita-back/vendor/bundle/
-habita-back/config/master.key
-habita-back/config/credentials/*.key
+# ---- Backend (backend) ----
+backend/tmp/
+backend/log/
+backend/storage/
+backend/.bundle/
+backend/vendor/bundle/
+backend/config/master.key
+backend/config/credentials/*.key
 
 # ---- Sistema ----
 .DS_Store
